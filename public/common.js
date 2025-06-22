@@ -18,23 +18,18 @@ export const logout = () => {
   window.location.href = 'index.html';
 };
 
-export const checkAuth = () => {
-  const protectedPages = ['admin_home.html', 'user_home.html', 'history.html', 'settings.html', 'request_points.html'];
-  const currentPage = window.location.pathname.split('/').pop();
+const protectedPages = ['admin_home.html', 'user_home.html', 'history.html', 'settings.html', 'request_points.html', 'notifications.html'];
+const currentPage = window.location.pathname.split('/').pop();
+
+if (protectedPages.includes(currentPage)) {
+  const token = localStorage.getItem('token');
+  const user = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
   
-  if (protectedPages.includes(currentPage)) {
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
-    
-    if (!token || !user.username) {
-      window.location.href = 'index.html';
-      return;
-    }
-
-    if (['admin_home.html', 'settings.html'].includes(currentPage) && user.role !== 'admin') {
-      window.location.href = 'index.html';
-    }
+  if (!token || !user.username) {
+    window.location.href = 'index.html';
   }
-};
 
-document.addEventListener('DOMContentLoaded', checkAuth);
+  if (['admin_home.html', 'settings.html', 'notifications.html'].includes(currentPage) && user.role !== 'admin') {
+    window.location.href = 'index.html';
+  }
+}
