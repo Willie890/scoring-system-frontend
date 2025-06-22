@@ -1,133 +1,162 @@
 const API_BASE = 'https://scoring-system-9yqb.onrender.com/api';
 
-const handleResponse = async (response) => {
+async function handleResponse(response) {
   if (!response.ok) {
-    const error = await response.json();
+    const error = await response.json().catch(() => ({}));
     throw new Error(error.message || 'Request failed');
   }
   return response.json();
-};
+}
 
-export const login = async (username, password) => {
+export async function login(username, password) {
   const response = await fetch(`${API_BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
+    body: JSON.stringify({ username, password }),
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const getScores = async () => {
+export async function getScores() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/leaderboard`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
   });
-  const data = await handleResponse(response);
-  return data.users.reduce((acc, user) => {
-    acc[user.username] = user.score;
-    return acc;
-  }, {});
-};
+  return handleResponse(response);
+}
 
-export const updateScores = async (username, points, reason, notes) => {
+export async function updateScores(username, points, reason, notes) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/leaderboard/update`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ username, points, reason, notes })
+    body: JSON.stringify({ username, points, reason, notes }),
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const getHistory = async () => {
+export async function getHistory() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/history`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const getRequests = async () => {
+export async function getRequests() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/requests`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const handleRequest = async (requestId, approve) => {
+export async function handleRequest(requestId, approve) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/requests/${requestId}/handle`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ approve })
+    body: JSON.stringify({ approve }),
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const createRequest = async (request) => {
+export async function createRequest(request) {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/requests`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify(request)
+    body: JSON.stringify(request),
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const getUsers = async () => {
+export async function getUsers() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/users`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const changePassword = async (username, newPassword) => {
+export async function changePassword(username, newPassword) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/users/${username}/password`, {
+  const response = await fetch(`${API_BASE}/users/${encodeURIComponent(username)}/password`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ newPassword })
+    body: JSON.stringify({ newPassword }),
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const resetPoints = async () => {
+export async function resetPoints() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/admin/reset-points`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const resetHistory = async () => {
+export async function resetHistory() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/admin/reset-history`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
 
-export const resetAll = async () => {
+export async function resetAll() {
   const token = localStorage.getItem('token');
   const response = await fetch(`${API_BASE}/admin/reset-all`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    credentials: 'include'
   });
   return handleResponse(response);
-};
+}
