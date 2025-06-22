@@ -29,7 +29,7 @@ async function renderHistory(filters = {}) {
     });
   } catch (error) {
     console.error('Error loading history:', error);
-    alert('Failed to load history');
+    alert(error.message || 'Failed to load history');
   }
 }
 
@@ -55,7 +55,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const { history } = await getHistory();
   
-  // Initialize filter dropdowns
   const names = [...new Set(history.map(h => h.user))];
   const reasons = [...new Set(history.map(h => h.reason))];
   
