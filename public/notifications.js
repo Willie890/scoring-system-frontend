@@ -16,9 +16,9 @@ async function renderRequests() {
         <td>${request.receivingUser}</td>
         <td>${request.points > 0 ? '+' + request.points : request.points}</td>
         <td>${request.reason}</td>
-        <td>${request.additionalNotes || 'None'}</td>
+        <td class="notes-cell">${request.additionalNotes || 'None'}</td>
         <td>pending</td>
-        <td>
+        <td class="action-buttons">
           <button class="approve-btn" data-id="${request._id}">Approve</button>
           <button class="reject-btn" data-id="${request._id}">Reject</button>
         </td>
@@ -35,7 +35,7 @@ async function renderRequests() {
     });
   } catch (error) {
     console.error('Error loading requests:', error);
-    alert('Failed to load requests');
+    alert(error.message || 'Failed to load requests');
   }
 }
 
