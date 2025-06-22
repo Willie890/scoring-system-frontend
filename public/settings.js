@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
-  // Initialize users dropdown
   const { users } = await getUsers();
   const userSelect = document.getElementById('userSelect');
   userSelect.innerHTML = '<option value="">Select user</option>';
@@ -22,7 +21,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     userSelect.appendChild(option);
   });
 
-  // Password change form
   document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = userSelect.value;
@@ -37,7 +35,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-      const result = await changePassword(username, newPassword);
+      await changePassword(username, newPassword);
       messageEl.textContent = 'Password changed successfully';
       messageEl.style.color = 'green';
       e.target.reset();
@@ -47,7 +45,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // Reset buttons
   document.getElementById('resetPointsBtn').addEventListener('click', async () => {
     if (confirm('Reset ALL points to zero?')) {
       await resetPoints();
@@ -69,4 +66,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 });
-
