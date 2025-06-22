@@ -27,7 +27,12 @@ export async function getScores() {
     },
     credentials: 'include'
   });
-  return handleResponse(response);
+  const data = await handleResponse(response);
+  const scoresMap = {};
+  data.users.forEach(user => {
+    scoresMap[user.username] = user.score;
+  });
+  return scoresMap;
 }
 
 export async function updateScores(username, points, reason, notes) {
@@ -38,7 +43,7 @@ export async function updateScores(username, points, reason, notes) {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ username, points, reason, notes }),
+    body: JSON.stringify({ username, points: Number(points), reason, notes: notes || '' }),
     credentials: 'include'
   });
   return handleResponse(response);
@@ -110,7 +115,7 @@ export async function getUsers() {
 
 export async function changePassword(username, newPassword) {
   const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/users/${encodeURIComponent(username)}/password`, {
+  const response = await fetch(`${API_BASE}/users/${username}/password`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
