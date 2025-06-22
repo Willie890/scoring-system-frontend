@@ -12,13 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const result = await login(username, password);
       
-      if (result.success) {
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('loggedInUser', JSON.stringify(result.user));
-        window.location.href = result.user.role === 'admin' ? 'admin_home.html' : 'user_home.html';
-      } else {
-        throw new Error(result.message || 'Login failed');
-      }
+      localStorage.setItem('token', result.token);
+      localStorage.setItem('loggedInUser', JSON.stringify({
+        username: result.user.username,
+        role: result.user.role
+      }));
+      
+      window.location.href = result.user.role === 'admin' ? 'admin_home.html' : 'user_home.html';
     } catch (error) {
       errorEl.textContent = error.message || 'Login failed. Please try again.';
       console.error('Login error:', error);
