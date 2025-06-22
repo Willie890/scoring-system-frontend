@@ -1,33 +1,67 @@
 const API_BASE = 'https://scoring-system-9yqb.onrender.com/api';
 
+// Enhanced error handling
 async function handleResponse(response) {
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
+    // Try to get error details from response
+    const error = await response.json().catch(() => ({
+      message: `Request failed with status ${response.status}`
+    }));
+    
+    // Special handling for CORS errors
+    if (response.status === 0) {
+      throw new Error(
+        'Network error. Please:\n' +
+        '1. Check your internet connection\n' +
+        '2. Ensure the backend service is running\n' +
+        '3. Contact support if the issue persists'
+      );
+    }
+    
     throw new Error(error.message || 'Request failed');
   }
   return response.json();
 }
 
+// Common fetch configuration
+async function apiFetch(endpoint, method = 'GET', body = null) {
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const config = {
+    method,
+    headers,
+    credentials: 'include',
+    mode: 'cors'
+  };
+
+  if (body) {
+    config.body = JSON.stringify(body);
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, config);
+    return await handleResponse(response);
+  } catch (error) {
+    console.error(`API request to ${endpoint} failed:`, error);
+    throw error;
+  }
+}
+
+// API functions
 export async function login(username, password) {
-  const response = await fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch('/auth/login', 'POST', { username, password });
 }
 
 export async function getScores() {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/leaderboard`, {
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include'
-  });
-  const data = await handleResponse(response);
+  const data = await apiFetch('/leaderboard');
   const scoresMap = {};
   data.users.forEach(user => {
     scoresMap[user.username] = user.score;
@@ -36,132 +70,61 @@ export async function getScores() {
 }
 
 export async function updateScores(username, points, reason, notes) {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/leaderboard/update`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ username, points: Number(points), reason, notes: notes || '' }),
-    credentials: 'include'
+  return apiFetch('/leaderboard/update', 'POST', { 
+    username, 
+    points: Number(points), 
+    reason, 
+    notes: notes || '' 
   });
-  return handleResponse(response);
 }
 
 export async function getHistory() {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/history`, {
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch('/history');
 }
 
 export async function getRequests() {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/requests`, {
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch('/requests');
 }
 
 export async function handleRequest(requestId, approve) {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/requests/${requestId}/handle`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ approve }),
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch(`/requests/${requestId}/handle`, 'POST', { approve });
 }
 
 export async function createRequest(request) {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/requests`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(request),
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch('/requests', 'POST', request);
 }
 
 export async function getUsers() {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/users`, {
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch('/users');
 }
 
 export async function changePassword(username, newPassword) {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/users/${username}/password`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ newPassword }),
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch(`/users/${username}/password`, 'POST', { newPassword });
 }
 
 export async function resetPoints() {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/admin/reset-points`, {
-    method: 'POST',
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch('/admin/reset-points', 'POST');
 }
 
 export async function resetHistory() {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/admin/reset-history`, {
-    method: 'POST',
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch('/admin/reset-history', 'POST');
 }
 
 export async function resetAll() {
-  const token = localStorage.getItem('token');
-  const response = await fetch(`${API_BASE}/admin/reset-all`, {
-    method: 'POST',
-    headers: { 
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    credentials: 'include'
-  });
-  return handleResponse(response);
+  return apiFetch('/admin/reset-all', 'POST');
 }
+
+// Connection test utility
+export async function testConnection() {
+  try {
+    await apiFetch('/health');
+    console.log('API connection successful');
+    return true;
+  } catch (error) {
+    console.error('API connection test failed:', error);
+    return false;
+  }
+}
+
+// Optional: Run connection test on load
+testConnection();
