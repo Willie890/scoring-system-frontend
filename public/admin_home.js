@@ -30,7 +30,7 @@ window.confirmReason = async () => {
     window.closeReasonPopup();
     await renderTable();
   } catch (error) {
-    alert('Failed to update scores');
+    alert(error.message || 'Failed to update scores');
     console.error(error);
   }
 };
@@ -72,7 +72,7 @@ async function renderTable() {
     });
   } catch (error) {
     console.error('Error loading scores:', error);
-    alert('Failed to load scores');
+    alert(error.message || 'Failed to load scores');
   }
 }
 
