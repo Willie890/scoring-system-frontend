@@ -24,7 +24,7 @@ async function renderLeaderboard() {
     });
   } catch (error) {
     console.error('Error loading leaderboard:', error);
-    alert('Failed to load leaderboard');
+    alert(error.message || 'Failed to load leaderboard');
   }
 }
 
