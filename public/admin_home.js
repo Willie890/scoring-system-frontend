@@ -1,166 +1,101 @@
-// admin_home.js - Admin leaderboard with history tracking
-import { 
-  getLeaderboardWithDetails, 
-  updateScores,
-  logHistoryEntry,
-  getHistory 
-} from './api.js';
+// admin_home.js
+import { getLeaderboardData, updateUserScore, logHistoryEntry } from './api.js';
 
-// DOM Elements
-const leaderboardTable = document.getElementById('leaderboardTable');
-const loadingIndicator = document.getElementById('loadingIndicator');
-const errorDisplay = document.getElementById('leaderboardError');
-const refreshBtn = document.getElementById('refreshLeaderboard');
+document.addEventListener('DOMContentLoaded', async () => {
+  const tableBody = document.querySelector('#leaderboardTable tbody');
+  const loadingIndicator = document.getElementById('loadingIndicator');
+  const errorDisplay = document.getElementById('errorDisplay');
 
-// Main function to load and render leaderboard
-async function loadLeaderboard() {
-  try {
-    showLoadingState();
-    const leaderboardData = await getLeaderboardWithDetails();
-    renderLeaderboard(leaderboardData);
-    hideLoadingState();
-  } catch (error) {
-    showError('Failed to load leaderboard. Please try again.');
-    console.error('Leaderboard load error:', error);
-  }
-}
-
-// UI State Management
-function showLoadingState() {
-  leaderboardTable.style.display = 'none';
-  loadingIndicator.style.display = 'block';
-  errorDisplay.textContent = '';
-}
-
-function hideLoadingState() {
-  leaderboardTable.style.display = 'table';
-  loadingIndicator.style.display = 'none';
-}
-
-function showError(message) {
-  errorDisplay.textContent = message;
-  loadingIndicator.style.display = 'none';
-}
-
-// Render leaderboard data to the table
-function renderLeaderboard(data) {
-  const tbody = leaderboardTable.querySelector('tbody');
-  tbody.innerHTML = '';
-
-  data.forEach((user, index) => {
-    const row = document.createElement('tr');
-    
-    row.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${user.username}</td>
-      <td>${user.score}</td>
-      <td><button class="adjust-btn" data-username="${user.username}">Adjust</button></td>
-    `;
-    
-    tbody.appendChild(row);
-  });
-
-  // Add event listeners to all adjust buttons
-  document.querySelectorAll('.adjust-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const username = e.target.getAttribute('data-username');
-      const currentScore = parseInt(e.target.closest('tr').querySelector('td:nth-child(3)').textContent);
-      showAdjustModal(username, currentScore);
-    });
-  });
-}
-
-// Score Adjustment Modal
-function showAdjustModal(username, currentScore) {
-  const modal = document.createElement('div');
-  modal.className = 'adjust-modal';
-  
-  modal.innerHTML = `
-    <div class="modal-content">
-      <h3>Adjust Points for ${username}</h3>
-      <div class="form-group">
-        <label>Current Points: ${currentScore}</label>
-        <input type="number" id="newPoints" value="${currentScore}" min="0">
-      </div>
-      <div class="form-group">
-        <label>Reason:</label>
-        <input type="text" id="adjustReason" placeholder="Reason for adjustment" required>
-      </div>
-      <div class="form-group">
-        <label>Notes:</label>
-        <textarea id="adjustNotes" placeholder="Additional notes"></textarea>
-      </div>
-      <div class="modal-actions">
-        <button id="cancelAdjust">Cancel</button>
-        <button id="saveAdjust">Save Changes</button>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(modal);
-
-  // Modal event handlers
-  document.getElementById('cancelAdjust').addEventListener('click', () => {
-    document.body.removeChild(modal);
-  });
-  
-  document.getElementById('saveAdjust').addEventListener('click', async () => {
-    const newPoints = parseInt(document.getElementById('newPoints').value);
-    const reason = document.getElementById('adjustReason').value;
-    const notes = document.getElementById('adjustNotes').value;
-    
-    if (isNaN(newPoints)) {
-      alert('Please enter a valid number for points');
-      return;
-    }
-    
-    if (!reason) {
-      alert('Please provide a reason for the adjustment');
-      return;
-    }
-
+  async function loadLeaderboard() {
     try {
-      await updateScoreAndLogHistory(username, currentScore, newPoints, reason, notes);
-      document.body.removeChild(modal);
-      await loadLeaderboard(); // Refresh the leaderboard
+      showLoading();
+      const users = await getLeaderboardData();
+      renderTable(users);
     } catch (error) {
-      alert(`Failed to update score: ${error.message}`);
+      showError(error.message);
+    } finally {
+      hideLoading();
     }
-  });
-}
+  }
 
-// Update score and log to history
-async function updateScoreAndLogHistory(username, oldScore, newPoints, reason, notes) {
-  const pointsChange = newPoints - oldScore;
-  const currentUser = JSON.parse(localStorage.getItem('loggedInUser'));
-  
-  try {
-    // Update the score
-    await updateScores(username, pointsChange, reason, notes);
+  function renderTable(users) {
+    tableBody.innerHTML = '';
     
-    // Log to history
-    await logHistoryEntry({
-      user: username,
-      points: pointsChange,
-      reason,
-      notes,
-      action: 'points_adjustment',
-      admin: currentUser.username
+    if (!users || users.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="4">No data available</td></tr>';
+      return;
+    }
+
+    users.forEach((user, index) => {
+      const row = document.createElement('tr');
+      
+      row.innerHTML = `
+        <td>${index + 1}</td>
+        <td>${user.username}</td>
+        <td>${user.score}</td>
+        <td>
+          <button class="adjust-btn" data-username="${user.username}">
+            Adjust
+          </button>
+        </td>
+      `;
+      
+      tableBody.appendChild(row);
     });
-    
-  } catch (error) {
-    console.error('Error in update operation:', error);
-    throw error;
-  }
-}
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-  loadLeaderboard();
-  
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', loadLeaderboard);
+    // Add event listeners to all adjust buttons
+    document.querySelectorAll('.adjust-btn').forEach(btn => {
+      btn.addEventListener('click', handleAdjustClick);
+    });
   }
+
+  async function handleAdjustClick(event) {
+    const username = event.target.dataset.username;
+    const row = event.target.closest('tr');
+    const currentScore = parseInt(row.querySelector('td:nth-child(3)').textContent);
+    
+    const newScore = prompt(`Enter new score for ${username}:`, currentScore);
+    if (!newScore || isNaN(newScore)) return;
+
+    const reason = prompt('Reason for adjustment:') || 'Manual adjustment';
+    
+    try {
+      await updateUserScore(username, newScore - currentScore, reason, 'Admin adjustment');
+      await loadLeaderboard(); // Refresh the table
+      
+      // Log to history
+      await logHistoryEntry({
+        user: username,
+        points: newScore - currentScore,
+        reason,
+        action: 'points_adjustment',
+        admin: JSON.parse(localStorage.getItem('loggedInUser')).username
+      });
+      
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    }
+  }
+
+  // Helper functions
+  function showLoading() {
+    loadingIndicator.style.display = 'block';
+    tableBody.style.opacity = '0.5';
+  }
+
+  function hideLoading() {
+    loadingIndicator.style.display = 'none';
+    tableBody.style.opacity = '1';
+  }
+
+  function showError(message) {
+    errorDisplay.textContent = message;
+    errorDisplay.style.display = 'block';
+    setTimeout(() => errorDisplay.style.display = 'none', 5000);
+  }
+
+  // Initial load
+  loadLeaderboard();
 });
 
 
