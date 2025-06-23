@@ -8,8 +8,8 @@ async function handleResponse(response) {
       message: `Request failed with status ${response.status}`
     }));
     
-    // Special handling for CORS errors
-    if (response.status === 0) {
+    // Special handling for CORS and network errors
+    if (response.status === 0 || error.message.includes('Failed to fetch')) {
       throw new Error(
         'Network error. Please:\n' +
         '1. Check your internet connection\n' +
@@ -23,7 +23,7 @@ async function handleResponse(response) {
   return response.json();
 }
 
-// Common fetch configuration
+// Centralized fetch function
 async function apiFetch(endpoint, method = 'GET', body = null) {
   const token = localStorage.getItem('token');
   const headers = {
@@ -55,45 +55,51 @@ async function apiFetch(endpoint, method = 'GET', body = null) {
   }
 }
 
-// API functions
-export async function login(username, password) {
-  return apiFetch('/auth/login', 'POST', { username, password });
-}
-
+// Leaderboard Functions
 export async function getLeaderboard() {
-  const data = await apiFetch('/leaderboard');
-  return data.users || [];
+  try {
+    const response = await apiFetch('/leaderboard');
+    
+    // Handle both array and object responses
+    if (Array.isArray(response)) {
+      return response;
+    } else if (response && response.users) {
+      return response.users;
+    }
+    
+    throw new Error('Unexpected leaderboard format');
+  } catch (error) {
+    console.error('Failed to load leaderboard:', error);
+    throw error;
+  }
 }
 
-export async function updateScore(username, points, reason, notes) {
+// Score Management
+export async function updateScore(username, points, reason, notes = '') {
   return apiFetch('/scores/update', 'POST', {
     username,
     points: Number(points),
     reason,
-    notes: notes || ''
+    notes
   });
 }
 
-export async function logHistoryEntry(entryData) {
-  return apiFetch('/history', 'POST', entryData);
+// History Functions
+export async function logHistory(entry) {
+  return apiFetch('/history', 'POST', {
+    user: entry.username,
+    points: entry.points,
+    reason: entry.reason,
+    notes: entry.notes || '',
+    action: 'points_adjustment'
+  });
 }
 
 export async function getHistory() {
   return apiFetch('/history');
 }
 
-export async function getRequests() {
-  return apiFetch('/requests');
-}
-
-export async function handleRequest(requestId, approve) {
-  return apiFetch(`/requests/${requestId}/handle`, 'POST', { approve });
-}
-
-export async function createRequest(request) {
-  return apiFetch('/requests', 'POST', request);
-}
-
+// User Management
 export async function getUsers() {
   return apiFetch('/users');
 }
@@ -102,6 +108,7 @@ export async function changePassword(username, newPassword) {
   return apiFetch(`/users/${username}/password`, 'POST', { newPassword });
 }
 
+// Admin Functions
 export async function resetPoints() {
   return apiFetch('/admin/reset-points', 'POST');
 }
@@ -114,17 +121,42 @@ export async function resetAll() {
   return apiFetch('/admin/reset-all', 'POST');
 }
 
-// Connection test utility
-export async function testConnection() {
+// Request Functions
+export async function getRequests() {
+  return apiFetch('/requests');
+}
+
+export async function handleRequest(requestId, action) {
+  return apiFetch(`/requests/${requestId}/handle`, 'POST', { 
+    action: action ? 'approve' : 'reject' 
+  });
+}
+
+export async function createRequest(request) {
+  return apiFetch('/requests', 'POST', request);
+}
+
+// Auth Functions
+export async function login(username, password) {
+  return apiFetch('/auth/login', 'POST', { username, password });
+}
+
+// System Functions
+export async function checkHealth() {
+  return apiFetch('/health');
+}
+
+// Initialize connection
+export async function initialize() {
   try {
-    await apiFetch('/health');
-    console.log('API connection successful');
+    const health = await checkHealth();
+    console.log('API connected:', health);
     return true;
   } catch (error) {
-    console.error('API connection test failed:', error);
+    console.error('API connection failed:', error);
     return false;
   }
 }
 
-// Initialize connection test
-testConnection();
+// Test connection on load
+initialize();
