@@ -59,40 +59,23 @@ async function apiFetch(endpoint, method = 'GET', body = null) {
 export async function login(username, password) {
   return apiFetch('/auth/login', 'POST', { username, password });
 }
-// Add to your existing api.js
-export async function logHistoryEntry(entryData) {
-  return apiFetch('/history', 'POST', entryData);
+
+export async function getLeaderboard() {
+  const data = await apiFetch('/leaderboard');
+  return data.users || [];
 }
 
-export async function getHistoryEntries() {
-  return apiFetch('/history');
-}
-
-// Enhanced updateScores function
-export async function updateScores(username, points, reason, notes) {
+export async function updateScore(username, points, reason, notes) {
   return apiFetch('/scores/update', 'POST', {
     username,
     points: Number(points),
     reason,
-    notes
+    notes: notes || ''
   });
-}
-export async function getScores() {
-  const data = await apiFetch('/leaderboard');
-  const scoresMap = {};
-  data.users.forEach(user => {
-    scoresMap[user.username] = user.score;
-  });
-  return scoresMap;
 }
 
-export async function updateScores(username, points, reason, notes) {
-  return apiFetch('/leaderboard/update', 'POST', { 
-    username, 
-    points: Number(points), 
-    reason, 
-    notes: notes || '' 
-  });
+export async function logHistoryEntry(entryData) {
+  return apiFetch('/history', 'POST', entryData);
 }
 
 export async function getHistory() {
@@ -143,5 +126,5 @@ export async function testConnection() {
   }
 }
 
-// Optional: Run connection test on load
+// Initialize connection test
 testConnection();
