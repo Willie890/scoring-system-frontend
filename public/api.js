@@ -59,7 +59,24 @@ async function apiFetch(endpoint, method = 'GET', body = null) {
 export async function login(username, password) {
   return apiFetch('/auth/login', 'POST', { username, password });
 }
+// Add to your existing api.js
+export async function logHistoryEntry(entryData) {
+  return apiFetch('/history', 'POST', entryData);
+}
 
+export async function getHistoryEntries() {
+  return apiFetch('/history');
+}
+
+// Enhanced updateScores function
+export async function updateScores(username, points, reason, notes) {
+  return apiFetch('/scores/update', 'POST', {
+    username,
+    points: Number(points),
+    reason,
+    notes
+  });
+}
 export async function getScores() {
   const data = await apiFetch('/leaderboard');
   const scoresMap = {};
