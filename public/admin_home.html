@@ -1,59 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Home</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VT Engineering Leaderboard - Admin</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #2c3e50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .error {
+            color: #d9534f;
+            padding: 10px;
+            margin-bottom: 20px;
+            display: none;
+            background-color: #f8d7da;
+            border-radius: 4px;
+        }
+        .nav {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .nav a {
+            text-decoration: none;
+            color: #2c3e50;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        .nav a:hover {
+            background-color: #e9ecef;
+        }
+    </style>
 </head>
 <body>
-  <nav class="navbar">
-    <ul>
-      <li><a href="admin_home.html">Home</a></li>
-      <li><a href="history.html">History</a></li>
-      <li><a href="settings.html">Settings</a></li>
-      <li><a href="notifications.html">Notifications</a></li>
-      <li><a href="#" onclick="logout()">Logout</a></li>
-    </ul>
-  </nav>
+    <div class="container">
+        <div class="header">
+            <div class="logo">VT ENGINEERING LEADERBOARD</div>
+            <div id="userInfo"></div>
+        </div>
 
-  <div class="content">
-    <h1 class="year-title">2025 Leaderboard</h1>
-    <h2 class="department-title">VT ENGINEERING</h2>
-    <p class="department-motto">CHANGING YOUR IDEAS INTO REALITY</p>
+        <div class="nav">
+            <a href="admin_home.html">Home</a>
+            <a href="history.html">History</a>
+            <a href="settings.html">Settings</a>
+            <a href="#" id="logoutBtn">Logout</a>
+        </div>
 
-    <div class="table-container">
-      <table id="pointsTable">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Adjust</th>
-            <th>Points</th>
-          </tr>
-        </thead>
-        <tbody id="scoreTableBody"></tbody>
-      </table>
+        <h1>2025 Leaderboard</h1>
+        <div id="errorDisplay" class="error"></div>
+        <div id="loadingIndicator" class="loading">Loading leaderboard data...</div>
+
+        <table id="leaderboardTable">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Points</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here by JavaScript -->
+            </tbody>
+        </table>
     </div>
-  </div>
 
-  <div id="reasonPopup" class="popup hidden">
-    <h3>Select a Reason</h3>
-    <select id="presetReason">
-      <option value="">-- Choose a reason --</option>
-    </select>
-    <textarea id="extraReason" placeholder="Additional notes (optional)..."></textarea>
-    <div class="popup-actions">
-      <button onclick="confirmReason()">Confirm</button>
-      <button onclick="closeReasonPopup()">Cancel</button>
-    </div>
-  </div>
+    <!-- Load the API first -->
+    <script src="js/api.js"></script>
+    
+    <!-- Then load the admin home script -->
+    <script>
+        // admin_home.js functionality embedded directly
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get DOM elements
+            const tableBody = document.querySelector('#leaderboardTable tbody');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorDisplay = document.getElementById('errorDisplay');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userInfo = document.getElementById('userInfo');
 
-  <script src="common.js"></script>
-  <script src="api.js"></script>
-  <script src="admin_home.js"></script>
+            // Display current user
+            const currentUser = JSON.parse(localStorage.getItem('loggedInUser') || '{}');
+            if (currentUser.username) {
+                userInfo.textContent = `Logged in as ${currentUser.username} (${currentUser.role})`;
+            }
+
+            // Logout handler
+            logoutBtn.addEventListener('click', function() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('loggedInUser');
+                window.location.href = 'login.html';
+            });
+
+            // Load leaderboard data
+            async function loadLeaderboard() {
+                try {
+                    showLoading();
+                    const users = await LeaderboardAPI.getLeaderboard();
+                    renderTable(users);
+                } catch (error) {
+                    showError('Failed to load leaderboard: ' + error.message);
+                    console.error('Error:', error);
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            // Render table
+            function renderTable(users) {
+                tableBody.innerHTML = '';
+                
+                if (!users || users.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4">No data available</td></tr>';
+                    return;
+                }
+
+                users.forEach(function(user, index) {
+                    const row = document.createElement('tr');
+                    
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${user.username}</td>
+                        <td>${user.score}</td>
+                        <td>
+                            <button class="adjust-btn" data-username="${user.username}">
+                                Adjust
+                            </button>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+
+                // Add event listeners to adjust buttons
+                document.querySelectorAll('.adjust-btn').forEach(function(btn) {
+                    btn.addEventListener('click', handleAdjustClick);
+                });
+            }
+
+            // Handle adjust button click
+            async function handleAdjustClick(event) {
+                const username = event.target.getAttribute('data-username');
+                const row = event.target.closest('tr');
+                const currentScore = parseInt(row.cells[2].textContent);
+                
+                const newScore = prompt('Enter new score for ' + username, currentScore);
+                if (newScore === null || isNaN(newScore)) return;
+                
+                const reason = prompt('Reason for adjustment:') || 'Manual adjustment';
+                const notes = prompt('Additional notes:') || '';
+                
+                try {
+                    await LeaderboardAPI.updateScore(
+                        username, 
+                        newScore - currentScore, 
+                        reason,
+                        notes
+                    );
+                    
+                    await LeaderboardAPI.logHistory({
+                        username: username,
+                        points: newScore - currentScore,
+                        reason: reason,
+                        notes: notes,
+                        admin: currentUser.username
+                    });
+                    
+                    await loadLeaderboard(); // Refresh data
+                    showError(''); // Clear any previous errors
+                } catch (error) {
+                    showError('Failed to update score: ' + error.message);
+                }
+            }
+
+            // Helper functions
+            function showLoading() {
+                loadingIndicator.style.display = 'block';
+                tableBody.style.opacity = '0.5';
+            }
+
+            function hideLoading() {
+                loadingIndicator.style.display = 'none';
+                tableBody.style.opacity = '1';
+            }
+
+            function showError(message) {
+                errorDisplay.textContent = message;
+                errorDisplay.style.display = message ? 'block' : 'none';
+            }
+
+            // Initial load
+            loadLeaderboard();
+        });
+    </script>
 </body>
 </html>
-
 
 
 
