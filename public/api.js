@@ -1,162 +1,163 @@
+// api.js - Complete non-module version
 const API_BASE = 'https://scoring-system-9yqb.onrender.com/api';
 
-// Enhanced error handling
-async function handleResponse(response) {
+// 1. Error Handling Function
+function handleResponse(response) {
   if (!response.ok) {
-    // Try to get error details from response
-    const error = await response.json().catch(() => ({
-      message: `Request failed with status ${response.status}`
-    }));
-    
-    // Special handling for CORS and network errors
-    if (response.status === 0 || error.message.includes('Failed to fetch')) {
-      throw new Error(
-        'Network error. Please:\n' +
-        '1. Check your internet connection\n' +
-        '2. Ensure the backend service is running\n' +
-        '3. Contact support if the issue persists'
-      );
-    }
-    
-    throw new Error(error.message || 'Request failed');
+    return response.json().then(function(error) {
+      if (response.status === 0) {
+        throw new Error(
+          'Network error. Please:\n' +
+          '1. Check your internet connection\n' +
+          '2. Ensure backend is running\n' +
+          '3. Contact support if issue persists'
+        );
+      }
+      throw new Error(error.message || 'Request failed with status ' + response.status);
+    }).catch(function() {
+      throw new Error('Request failed with status ' + response.status);
+    });
   }
   return response.json();
 }
 
-// Centralized fetch function
-async function apiFetch(endpoint, method = 'GET', body = null) {
-  const token = localStorage.getItem('token');
-  const headers = {
+// 2. Main API Fetch Function
+function apiFetch(endpoint, method, body) {
+  var token = localStorage.getItem('token');
+  var headers = {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   };
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers['Authorization'] = 'Bearer ' + token;
   }
 
-  const config = {
-    method,
-    headers,
-    credentials: 'include',
-    mode: 'cors'
+  var config = {
+    method: method || 'GET',
+    headers: headers,
+    credentials: 'include'
   };
 
   if (body) {
     config.body = JSON.stringify(body);
   }
 
-  try {
-    const response = await fetch(`${API_BASE}${endpoint}`, config);
-    return await handleResponse(response);
-  } catch (error) {
-    console.error(`API request to ${endpoint} failed:`, error);
-    throw error;
-  }
+  return fetch(API_BASE + endpoint, config)
+    .then(handleResponse)
+    .catch(function(error) {
+      console.error('API request failed:', error);
+      throw error;
+    });
 }
 
-// Leaderboard Functions
-export async function getLeaderboard() {
-  try {
-    const response = await apiFetch('/leaderboard');
-    
-    // Handle both array and object responses
-    if (Array.isArray(response)) {
-      return response;
-    } else if (response && response.users) {
-      return response.users;
-    }
-    
-    throw new Error('Unexpected leaderboard format');
-  } catch (error) {
-    console.error('Failed to load leaderboard:', error);
-    throw error;
-  }
-}
-
-// Score Management
-export async function updateScore(username, points, reason, notes = '') {
-  return apiFetch('/scores/update', 'POST', {
-    username,
-    points: Number(points),
-    reason,
-    notes
+// 3. Leaderboard Functions
+function getLeaderboard() {
+  return apiFetch('/leaderboard').then(function(response) {
+    return Array.isArray(response) ? response : response.users || [];
   });
 }
 
-// History Functions
-export async function logHistory(entry) {
+function updateScore(username, points, reason, notes) {
+  return apiFetch('/scores/update', 'POST', {
+    username: username,
+    points: Number(points),
+    reason: reason,
+    notes: notes || ''
+  });
+}
+
+// 4. History Functions
+function logHistory(entry) {
   return apiFetch('/history', 'POST', {
     user: entry.username,
     points: entry.points,
     reason: entry.reason,
     notes: entry.notes || '',
-    action: 'points_adjustment'
+    action: 'points_adjustment',
+    admin: entry.admin
   });
 }
 
-export async function getHistory() {
+function getHistory() {
   return apiFetch('/history');
 }
 
-// User Management
-export async function getUsers() {
+// 5. User Functions
+function getUsers() {
   return apiFetch('/users');
 }
 
-export async function changePassword(username, newPassword) {
-  return apiFetch(`/users/${username}/password`, 'POST', { newPassword });
-}
-
-// Admin Functions
-export async function resetPoints() {
-  return apiFetch('/admin/reset-points', 'POST');
-}
-
-export async function resetHistory() {
-  return apiFetch('/admin/reset-history', 'POST');
-}
-
-export async function resetAll() {
-  return apiFetch('/admin/reset-all', 'POST');
-}
-
-// Request Functions
-export async function getRequests() {
-  return apiFetch('/requests');
-}
-
-export async function handleRequest(requestId, action) {
-  return apiFetch(`/requests/${requestId}/handle`, 'POST', { 
-    action: action ? 'approve' : 'reject' 
+function changePassword(username, newPassword) {
+  return apiFetch('/users/' + username + '/password', 'POST', {
+    newPassword: newPassword
   });
 }
 
-export async function createRequest(request) {
+// 6. Admin Functions
+function resetPoints() {
+  return apiFetch('/admin/reset-points', 'POST');
+}
+
+function resetHistory() {
+  return apiFetch('/admin/reset-history', 'POST');
+}
+
+function resetAll() {
+  return apiFetch('/admin/reset-all', 'POST');
+}
+
+// 7. Request Functions
+function getRequests() {
+  return apiFetch('/requests');
+}
+
+function handleRequest(requestId, approve) {
+  return apiFetch('/requests/' + requestId + '/handle', 'POST', {
+    approve: approve
+  });
+}
+
+function createRequest(request) {
   return apiFetch('/requests', 'POST', request);
 }
 
-// Auth Functions
-export async function login(username, password) {
-  return apiFetch('/auth/login', 'POST', { username, password });
+// 8. Auth Functions
+function login(username, password) {
+  return apiFetch('/auth/login', 'POST', {
+    username: username,
+    password: password
+  });
 }
 
-// System Functions
-export async function checkHealth() {
+// 9. System Functions
+function checkHealth() {
   return apiFetch('/health');
 }
 
-// Initialize connection
-export async function initialize() {
-  try {
-    const health = await checkHealth();
-    console.log('API connected:', health);
-    return true;
-  } catch (error) {
+// 10. Initialize API (self-executing)
+(function initialize() {
+  checkHealth().then(function() {
+    console.log('API connection successful');
+  }).catch(function(error) {
     console.error('API connection failed:', error);
-    return false;
-  }
-}
+  });
+})();
 
-// Test connection on load
-initialize();
+// 11. Export to global scope
+window.LeaderboardAPI = {
+  getLeaderboard: getLeaderboard,
+  updateScore: updateScore,
+  logHistory: logHistory,
+  getHistory: getHistory,
+  getUsers: getUsers,
+  changePassword: changePassword,
+  resetPoints: resetPoints,
+  resetHistory: resetHistory,
+  resetAll: resetAll,
+  getRequests: getRequests,
+  handleRequest: handleRequest,
+  createRequest: createRequest,
+  login: login,
+  checkHealth: checkHealth
+};
