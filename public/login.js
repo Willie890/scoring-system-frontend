@@ -1,75 +1,39 @@
-import { login } from './api.js';
+// login.js - Traditional JS version
+document.addEventListener('DOMContentLoaded', function() {
+  const loginForm = document.getElementById('loginForm');
+  const errorDisplay = document.getElementById('errorDisplay');
 
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('loginForm');
-  const errorEl = document.getElementById('loginError');
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const originalBtnText = submitBtn.textContent;
-
-  form.addEventListener('submit', async (e) => {
+  loginForm.addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Get form values
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
-
-    // UI feedback
-    errorEl.textContent = '';
+    const submitBtn = loginForm.querySelector('button[type="submit"]');
+    
+    // UI Feedback
+    errorDisplay.textContent = '';
+    errorDisplay.style.display = 'none';
     submitBtn.disabled = true;
     submitBtn.textContent = 'Logging in...';
 
-    try {
-      // Attempt login
-      const result = await login(username, password);
-      
-      // Store auth data
-      localStorage.setItem('token', result.token);
-      localStorage.setItem('loggedInUser', JSON.stringify({
-        username: result.user.username,
-        role: result.user.role
-      }));
-      
-      // Redirect based on role
-      window.location.href = result.user.role === 'admin' 
-        ? 'admin_home.html' 
-        : 'user_home.html';
-        
-    } catch (error) {
-      // Handle errors
-      console.error('Login error:', error);
-      
-      // User-friendly error messages
-      let errorMessage = error.message || 'Login failed. Please try again.';
-      
-      if (error.message.includes('Network error')) {
-        errorMessage = 'Cannot connect to server. Please check your internet connection.';
-      } else if (error.message.includes('credentials')) {
-        errorMessage = 'Invalid username or password';
-      }
-      
-      errorEl.textContent = errorMessage;
-      errorEl.style.display = 'block';
-      
-    } finally {
-      // Reset UI
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalBtnText;
-    }
+    LeaderboardAPI.login(username, password)
+      .then(function(response) {
+        // Redirect based on role
+        if (response.user.role === 'admin') {
+          window.location.href = 'admin_home.html';
+        } else {
+          window.location.href = 'user_home.html';
+        }
+      })
+      .catch(function(error) {
+        errorDisplay.textContent = error.message || 'Login failed. Please try again.';
+        errorDisplay.style.display = 'block';
+      })
+      .finally(function() {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Login';
+      });
   });
-
-  // Optional: Network status indicator
-  function updateNetworkStatus() {
-    const statusEl = document.getElementById('network-status');
-    if (statusEl) {
-      statusEl.textContent = navigator.onLine 
-        ? '🟢 Online' 
-        : '🔴 Offline - Check your connection';
-    }
-  }
-
-  window.addEventListener('online', updateNetworkStatus);
-  window.addEventListener('offline', updateNetworkStatus);
-  updateNetworkStatus();
 });
 
 
