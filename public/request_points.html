@@ -1,0 +1,197 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Request Points</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .request-container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 30px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .form-group select, 
+    .form-group input, 
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .submit-btn:hover {
+      background-color: #0b7dda;
+    }
+    
+    .department-title {
+      text-align: center;
+      color: black;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <ul>
+      <li><a href="user_home.html">Home</a></li>
+      <li><a href="history.html">History</a></li>
+      <li><a href="request_points.html">Request Points</a></li>
+      <li><a href="#" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="request-container">
+    <h1>Request Points</h1>
+    <form id="requestForm">
+      <!-- Requesting User -->
+      <div class="form-group">
+        <label for="requestingUser">Requesting User:</label>
+        <select id="requestingUser" required>
+          <option value="">Select your name</option>
+          <!-- Filled by JavaScript -->
+        </select>
+      </div>
+      
+      <!-- Receiving User -->
+      <div class="form-group">
+        <label for="receivingUser">Receiving User:</label>
+        <select id="receivingUser" required>
+          <option value="">Select recipient's name</option>
+          <!-- Filled by JavaScript -->
+        </select>
+      </div>
+      
+      <!-- Points -->
+      <div class="form-group">
+        <label for="points">Points:</label>
+        <select id="points" required>
+          <option value="">Select points</option>
+          <option value="-50">-50</option>
+          <option value="-30">-30</option>
+          <option value="-20">-20</option>
+          <option value="-10">-10</option>
+          <option value="2">+2</option>
+          <option value="5">+5</option>
+          <option value="10">+10</option>
+          <option value="20">+20</option>
+          <option value="50">+50</option>
+        </select>
+      </div>
+      
+      <!-- Reason -->
+      <div class="form-group">
+        <label for="reason">Reason:</label>
+        <select id="reason" required>
+          <option value="">Select a reason</option>
+          <option value="Improvement Initiative">Improvement Initiative</option>
+          <option value="3S Adherence">3S Adherence</option>
+          <option value="Preventative Maintenance">Preventative Maintenance</option>
+          <option value="Defect Reduction">Defect Reduction</option>
+          <option value="Efficiency Gains">Efficiency Gains</option>
+          <option value="Skill Development">Skill Development</option>
+          <option value="Kaizen Suggestion">Kaizen Suggestion</option>
+          <option value="Team Contribution">Team Contribution</option>
+          <option value="Tooling Return Failure">Tooling Return Failure</option>
+          <option value="Kiosk Misconduct">Kiosk Misconduct</option>
+          <option value="Rework or Delay">Rework or Delay</option>
+          <option value="Maintenance Checklist throughout failure">Maintenance Checklist throughout failure</option>
+          <option value="Safety Violations">Safety Violations</option>
+          <option value="Tool Breakage">Tool Breakage</option>
+        </select>
+      </div>
+      
+      <!-- Additional Notes -->
+      <div class="form-group">
+        <label for="additionalNotes">Additional Notes:</label>
+        <textarea id="additionalNotes" placeholder="Enter any additional details here..."></textarea>
+      </div>
+      
+      <button type="submit" class="submit-btn">Submit Request</button>
+    </form>
+  </div>
+
+  <div class="department-title">
+    <h2>VT ENGINEERING</h2>
+    <p>CHANGING YOUR IDEAS INTO REALITY</p>
+  </div>
+
+  <script src="request_points.js"></script>
+  <script>
+    // Initialize the form with user data
+    document.addEventListener("DOMContentLoaded", function() {
+      const users = [
+        "Jp Faber",
+        "Stefan van Der Merwe",
+        "Ewan Van Eeden",
+        "Frikkie Van Der Heever",
+        "Carlo Engela",
+        "Zingisani Mavumengwana",
+        "Hlobelo Serathi",
+		"Prins Moyo",
+        "Patrick Mokotoamane"
+      ];
+      
+      const requestingSelect = document.getElementById("requestingUser");
+      const receivingSelect = document.getElementById("receivingUser");
+      
+      // Get logged in user
+      const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+      
+      // Populate requesting user (default to logged in user)
+      users.forEach(user => {
+        const option = document.createElement("option");
+        option.value = user;
+        option.textContent = user;
+        requestingSelect.appendChild(option.cloneNode(true));
+        receivingSelect.appendChild(option);
+        
+        // Set default selection for requesting user
+        if (loggedInUser && user === loggedInUser.username) {
+          requestingSelect.value = user;
+        }
+      });
+    });
+    
+    function logout() {
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>

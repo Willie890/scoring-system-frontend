@@ -1,0 +1,67 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Home</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <ul>
+      <li><a href="admin_home.html">Home</a></li>
+      <li><a href="history.html">History</a></li>
+      <li><a href="settings.html">Settings</a></li>
+      <li><a href="notifications.html">Notifications</a></li>
+      <li><a href="#" onclick="logout()">Logout</a></li>
+    </ul>
+  </nav>
+
+  <div class="content">
+    <h1 class="year-title">2025 Leaderboard</h1>
+    <h2 class="department-title">VT ENGINEERING</h2>
+    <p class="department-motto">CHANGING YOUR IDEAS INTO REALITY</p>
+
+ <div class="table-container">
+    <table id="pointsTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Adjust</th>
+                <th>Points</th>
+            </tr>
+        </thead>
+        <tbody id="scoreTableBody"></tbody>
+    </table>
+</div>
+
+<!-- Add this at the bottom of your body, before the scripts -->
+<div id="reasonPopup" class="popup hidden">
+    <h3>Select a Reason</h3>
+    <select id="presetReason">
+        <option value="">-- Choose a reason --</option>
+    </select>
+    <textarea id="extraReason" placeholder="Additional notes (optional)..."></textarea>
+    <div class="popup-actions">
+        <button onclick="window.confirmReason()">Confirm</button>
+        <button onclick="window.closeReasonPopup()">Cancel</button>
+    </div>
+</div>
+<script src="common.js"></script>
+<script src="admin_home.js"></script>
+
+  
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
