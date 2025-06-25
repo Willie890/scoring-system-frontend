@@ -1,4 +1,4 @@
-// common.js
+// common.js - Complete updated file
 const appUsers = [
     "Jp Faber",
     "Stefan van Der Merwe",
@@ -7,7 +7,7 @@ const appUsers = [
     "Carlo Engela",
     "Zingisani Mavumengwana",
     "Hlobelo Serathi",
-	"Prins Moyo",
+    "Prins Moyo",
     "Patrick Mokotoamane"
 ];
 
@@ -30,7 +30,6 @@ const presetReasons = [
 
 function initializeScores() {
     let scores = JSON.parse(localStorage.getItem("scores")) || {};
-    // Ensure all appUsers exist with proper scores
     appUsers.forEach(user => {
         if (scores[user] === undefined || typeof scores[user] !== 'number') {
             scores[user] = 0;
@@ -40,9 +39,6 @@ function initializeScores() {
     return scores;
 }
 
-function updateLeaderboard() {
-    window.dispatchEvent(new CustomEvent('leaderboardUpdated'));
-}
 function updateScores(user, pointsChange) {
     let scores = JSON.parse(localStorage.getItem("scores")) || {};
     scores[user] = (scores[user] || 0) + pointsChange;
@@ -50,10 +46,11 @@ function updateScores(user, pointsChange) {
     window.dispatchEvent(new CustomEvent('leaderboardUpdated'));
 }
 
-// Universal logout function
+// Enhanced logout function
 window.logout = function(e) {
     if (e) e.preventDefault();
     try {
+        localStorage.removeItem("token");
         localStorage.removeItem("loggedInUser");
         window.location.href = "index.html";
     } catch (error) {
@@ -64,8 +61,24 @@ window.logout = function(e) {
 
 // Initialize logout event listeners
 document.addEventListener("DOMContentLoaded", function() {
-    // Add logout event listeners to all logout links
     document.querySelectorAll('[onclick*="logout"]').forEach(element => {
         element.onclick = window.logout;
     });
+    
+    // Add authentication check to protected pages
+    const protectedPages = ['admin_home.html', 'user_home.html', 'settings.html', 'history.html', 'request_points.html'];
+    if (protectedPages.some(page => window.location.pathname.endsWith(page))) {
+        const token = localStorage.getItem("token");
+        const user = JSON.parse(localStorage.getItem("loggedInUser")) || {};
+        
+        if (!token && !user.username) {
+            window.location.href = "index.html";
+            return;
+        }
+        
+        // Redirect admin trying to access user pages and vice versa
+        if (window.location.pathname.includes("admin") && user.role !== "admin") {
+            window.location.href = "user_home.html";
+        }
+    }
 });
