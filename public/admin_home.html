@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,35 +22,45 @@
     <h2 class="department-title">VT ENGINEERING</h2>
     <p class="department-motto">CHANGING YOUR IDEAS INTO REALITY</p>
 
- <div class="table-container">
-    <table id="pointsTable">
+    <div class="table-container">
+      <table id="pointsTable">
         <thead>
-            <tr>
-                <th>Name</th>
-                <th>Adjust</th>
-                <th>Points</th>
-            </tr>
+          <tr>
+            <th>Name</th>
+            <th>Adjust</th>
+            <th>Points</th>
+          </tr>
         </thead>
         <tbody id="scoreTableBody"></tbody>
-    </table>
-</div>
-
-<!-- Add this at the bottom of your body, before the scripts -->
-<div id="reasonPopup" class="popup hidden">
-    <h3>Select a Reason</h3>
-    <select id="presetReason">
-        <option value="">-- Choose a reason --</option>
-    </select>
-    <textarea id="extraReason" placeholder="Additional notes (optional)..."></textarea>
-    <div class="popup-actions">
-        <button onclick="window.confirmReason()">Confirm</button>
-        <button onclick="window.closeReasonPopup()">Cancel</button>
+      </table>
     </div>
-</div>
-<script src="common.js"></script>
-<script src="admin_home.js"></script>
+  </div>
 
-  
+  <div id="adjustmentDialog" class="popup hidden">
+    <div class="popup-content">
+      <h3>Adjust Points</h3>
+      <p>User: <span id="adjustUsername"></span></p>
+      <p>Points: <span id="adjustPoints"></span></p>
+      
+      <div class="form-group">
+        <label>Reason:</label>
+        <select id="reasonSelect" required></select>
+      </div>
+      
+      <div class="form-group">
+        <label>Notes:</label>
+        <textarea id="adjustNotes" rows="3"></textarea>
+      </div>
+      
+      <div class="popup-actions">
+        <button onclick="closeAdjustmentDialog()">Cancel</button>
+        <button id="submitAdjustment">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="common.js"></script>
+  <script src="admin_home.js"></script>
 </body>
 </html>
 
