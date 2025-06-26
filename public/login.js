@@ -1,4 +1,3 @@
-// login.js - Complete updated file
 document.addEventListener("DOMContentLoaded", function() {
     // Initialize users in localStorage if empty
     const defaultUsers = [
@@ -25,8 +24,10 @@ document.addEventListener("DOMContentLoaded", function() {
         const errorEl = document.getElementById("loginError");
 
         try {
-            // First try backend login
-            const apiUrl = process.env.REACT_APP_API_URL || 'https://your-render-backend.onrender.com';
+            // Replace with your actual Render backend URL
+            const apiUrl = 'https://your-render-app.onrender.com';
+            
+            // Try backend login first
             const response = await fetch(`${apiUrl}/api/auth/login`, {
                 method: 'POST',
                 headers: {
@@ -39,7 +40,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 const data = await response.json();
                 localStorage.setItem("token", data.token);
                 localStorage.setItem("loggedInUser", JSON.stringify(data.user));
-                window.location.href = data.user.role === "admin" ? "admin_home.html" : "user_home.html";
+                
+                // Redirect based on role
+                window.location.href = data.user.role === "admin" 
+                    ? "admin_home.html" 
+                    : "user_home.html";
                 return;
             }
 
@@ -52,7 +57,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
             if (user) {
                 localStorage.setItem("loggedInUser", JSON.stringify(user));
-                window.location.href = user.role === "admin" ? "admin_home.html" : "user_home.html";
+                window.location.href = user.role === "admin" 
+                    ? "admin_home.html" 
+                    : "user_home.html";
             } else {
                 throw new Error("Invalid username or password");
             }
@@ -63,6 +70,3 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
-
-
-
