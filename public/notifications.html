@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,27 +13,6 @@
       background-color: white;
       border-radius: 8px;
       box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    }
-    
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    
-    th, td {
-      padding: 12px 15px;
-      text-align: left;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    
-    th {
-      background-color: #2196F3;
-      color: white;
-    }
-    
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
     }
     
     .action-buttons {
@@ -81,25 +59,26 @@
 
   <div class="notifications-container">
     <h1>Pending Requests</h1>
-    <table id="notificationsTable">
+    <table id="requestsTable">
       <thead>
         <tr>
-          <th>Requested By</th>
-          <th>Recipient</th>
+          <th>From</th>
+          <th>To</th>
           <th>Points</th>
           <th>Reason</th>
-          <th>Additional Notes</th>
-          <th>Status</th>
+          <th>Notes</th>
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- Filled by JavaScript -->
+      <tbody id="requestsTableBody">
+        <tr>
+          <td colspan="6" class="no-data">Loading requests...</td>
+        </tr>
       </tbody>
     </table>
   </div>
-  
-<script src="common.js"></script>
+
+  <script src="common.js"></script>
   <script src="notifications.js"></script>
 </body>
 </html>
