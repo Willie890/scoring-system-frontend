@@ -6,68 +6,42 @@
   <title>History</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    .truncated-text {
-      max-width: 150px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      cursor: pointer;
-      display: inline-block;
-      vertical-align: middle;
+    .history-container {
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 30px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
     }
     
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.7);
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
     }
     
-    .modal-content {
-      background-color: #fefefe;
-      margin: 10% auto;
-      padding: 20px;
-      border: 1px solid #888;
-      width: 80%;
-      max-width: 600px;
-      max-height: 70vh;
-      overflow-y: auto;
-      border-radius: 5px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      position: relative;
+    .filter-group {
+      flex: 1;
+      min-width: 200px;
     }
     
-    .close-modal {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      color: #aaa;
-      font-size: 28px;
+    .filter-group label {
+      display: block;
+      margin-bottom: 5px;
       font-weight: bold;
-      cursor: pointer;
+      color: #555;
     }
     
-    .close-modal:hover {
-      color: black;
+    .positive {
+      color: #4CAF50;
+      font-weight: bold;
     }
     
-    .copy-btn {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      margin-top: 15px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    
-    .copy-btn:hover {
-      background-color: #45a049;
+    .negative {
+      color: #f44336;
+      font-weight: bold;
     }
     
     .no-data {
@@ -87,60 +61,40 @@
   </nav>
 
   <div class="history-container">
-    <h2>History Log</h2>
-
-    <!-- Filters Section -->
+    <h1>Point History</h1>
+    
     <div class="filters">
+      <div class="filter-group">
+        <label for="filterUser">Filter by User:</label>
+        <select id="filterUser" onchange="applyFilters()">
+          <option value="all">All Users</option>
+        </select>
+      </div>
+      
       <div class="filter-group">
         <label for="filterDate">Filter by Date:</label>
         <input type="date" id="filterDate" onchange="applyFilters()">
       </div>
       
-      <div class="filter-group">
-        <label for="filterName">Filter by Name:</label>
-        <select id="filterName" onchange="applyFilters()">
-          <option value="all">All Names</option>
-        </select>
-      </div>
-      
-      <div class="filter-group">
-        <label for="filterReason">Filter by Reason:</label>
-        <select id="filterReason" onchange="applyFilters()">
-          <option value="all">All Reasons</option>
-        </select>
-      </div>
-      
       <button onclick="resetFilters()" class="reset-btn">Reset Filters</button>
     </div>
-
-    <!-- History Table -->
+    
     <table class="history-table">
       <thead>
         <tr>
-          <th>Name</th>
+          <th>User</th>
           <th>Points</th>
           <th>Reason</th>
-          <th>Notes</th>
-          <th>Timestamp</th>
+          <th>Admin</th>
+          <th>Date</th>
         </tr>
       </thead>
       <tbody id="historyTableBody"></tbody>
     </table>
   </div>
 
-  <!-- Modal for displaying full text -->
-  <div id="textModal" class="modal">
-    <div class="modal-content">
-      <span class="close-modal" onclick="closeModal()">&times;</span>
-      <h3>Full Details</h3>
-      <div id="modalContent"></div>
-      <button class="copy-btn" onclick="copyToClipboard()">Copy Text</button>
-    </div>
-  </div>
-<script src="common.js"></script>
+  <script src="common.js"></script>
   <script src="history.js"></script>
-
-  </script>
 </body>
 </html>
 
