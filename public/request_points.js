@@ -1,67 +1,64 @@
-document.addEventListener("DOMContentLoaded", function() {
-    // Initialize form with user data
-    const nameSelect = document.getElementById("receivingUser");
-    const users = [
-        "Jp Faber",
-        "Stefan van Der Merwe",
-        "Ewan Van Eeden",
-        "Frikkie Van Der Heever",
-        "Carlo Engela",
-        "Zingisani Mavumengwana",
-        "Hlobelo Serathi",
-        "Prins Moyo",
-        "Patrick Mokotoamane"
-    ];
+document.addEventListener('DOMContentLoaded', async function() {
+  // Get logged in user
+  const user = JSON.parse(localStorage.getItem('loggedInUser'));
+  if (!user) {
+    logout();
+    return;
+  }
 
-    users.forEach(user => {
-        const option = document.createElement("option");
-        option.value = user;
-        option.textContent = user;
-        nameSelect.appendChild(option);
+  // Set requesting user
+  document.getElementById('requestingUser').value = user.username;
+
+  // Load other users
+  try {
+    showLoading(true);
+    const { users } = await apiRequest('/api/users');
+    
+    const select = document.getElementById('receivingUser');
+    users.forEach(u => {
+      if (u.username !== user.username) {
+        const option = document.createElement('option');
+        option.value = u.username;
+        option.textContent = u.username;
+        select.appendChild(option);
+      }
     });
+  } catch (error) {
+    showError('Failed to load users');
+    console.error(error);
+  } finally {
+    showLoading(false);
+  }
 
-    // Set requesting user to logged in user
-    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
-    if (loggedInUser) {
-        document.getElementById("requestingUser").value = loggedInUser.username;
+  // Form submission
+  document.getElementById('requestForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('submitBtnText');
+    const errorEl = document.getElementById('requestError');
+
+    try {
+      showLoading(true);
+      btn.disabled = true;
+      btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+      await apiRequest('/api/requests', 'POST', {
+        receivingUser: document.getElementById('receivingUser').value,
+        points: parseInt(document.getElementById('points').value),
+        reason: document.getElementById('reason').value,
+        additionalNotes: document.getElementById('additionalNotes').value || undefined
+      });
+
+      showSuccess('Request submitted successfully!');
+      this.reset();
+      document.getElementById('requestingUser').value = user.username;
+    } catch (error) {
+      errorEl.textContent = error.message || 'Failed to submit request';
+      console.error(error);
+    } finally {
+      showLoading(false);
+      btn.disabled = false;
+      btnText.textContent = 'Submit Request';
     }
-
-    // Form submission
-    document.getElementById("requestForm").addEventListener("submit", async function(e) {
-        e.preventDefault();
-        
-        const requestingUser = document.getElementById("requestingUser").value;
-        const receivingUser = document.getElementById("receivingUser").value;
-        const points = parseInt(document.getElementById("points").value);
-        const reason = document.getElementById("reason").value;
-        const additionalNotes = document.getElementById("additionalNotes").value;
-
-        if (!requestingUser || !receivingUser || isNaN(points) || !reason) {
-            showError("Please fill all required fields");
-            return;
-        }
-
-        try {
-            showLoading(true);
-            await apiRequest('/api/requests', 'POST', {
-                receivingUser,
-                points,
-                reason,
-                additionalNotes
-            });
-            
-            showSuccess("Request submitted successfully!");
-            document.getElementById("requestForm").reset();
-            
-            // Reset requesting user to logged in user
-            if (loggedInUser) {
-                document.getElementById("requestingUser").value = loggedInUser.username;
-            }
-        } catch (error) {
-            console.error("Request error:", error);
-            showError("Failed to submit request");
-        } finally {
-            showLoading(false);
-        }
-    });
+  });
 });
