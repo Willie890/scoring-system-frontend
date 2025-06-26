@@ -5,6 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Settings</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .settings-container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 30px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    }
+    
+    .settings-section {
+      margin-bottom: 40px;
+      padding: 20px;
+      border: 1px solid #eee;
+      border-radius: 8px;
+    }
+    
+    .danger-zone {
+      border-color: #f44336;
+      background-color: #ffebee;
+    }
+    
+    .danger-btn {
+      background-color: #f44336 !important;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -19,38 +45,40 @@
   <div class="settings-container">
     <h1>Admin Settings</h1>
     
-<!-- settings.html -->
-<div class="settings-section">
-  <h2>Change Password</h2>
-  <form id="changePasswordForm">
-    <div class="form-group">
-      <label for="userSelect">Select User:</label>
-      <select id="userSelect" required>
-        <option value="">Select a user</option>
-        <!-- Filled by JavaScript -->
-      </select>
+    <div class="settings-section">
+      <h2>Password Management</h2>
+      <form id="passwordForm">
+        <div class="form-group">
+          <label for="userSelect">Select User:</label>
+          <select id="userSelect" required>
+            <option value="">Select user</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="newPassword">New Password:</label>
+          <input type="password" id="newPassword" required minlength="6">
+        </div>
+        
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password:</label>
+          <input type="password" id="confirmPassword" required>
+        </div>
+        
+        <button type="submit" class="save-btn">Change Password</button>
+        <div id="passwordMessage"></div>
+      </form>
     </div>
-    <div class="form-group">
-      <label for="newPassword">New Password:</label>
-      <input type="password" id="newPassword" required minlength="6">
+    
+    <div class="settings-section danger-zone">
+      <h2>System Controls</h2>
+      <button id="resetPointsBtn" class="danger-btn">Reset All Points</button>
+      <button id="resetHistoryBtn" class="danger-btn">Clear History</button>
+      <div id="resetMessage"></div>
     </div>
-    <div class="form-group">
-      <label for="confirmPassword">Confirm New Password:</label>
-      <input type="password" id="confirmPassword" required>
-    </div>
-    <button type="submit" class="save-btn">Change Password</button>
-    <div id="passwordMessage" class="message"></div>
-  </form>
-</div>
+  </div>
 
-<div class="settings-section">
-  <h2>System Controls</h2>
-  <button id="resetPointsBtn" class="reset-btn">Reset All Points</button>
-  <button id="resetHistoryBtn" class="reset-btn">Reset All History</button>
-  <button id="resetAllBtn" class="reset-btn danger">Reset Everything</button>
-  <div id="resetMessage" class="message"></div>
-</div>
-<script src="common.js"></script>
+  <script src="common.js"></script>
   <script src="settings.js"></script>
 </body>
 </html>
