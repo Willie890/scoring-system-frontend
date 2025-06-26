@@ -1,51 +1,46 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // Initialize scores
-    initializeScores();
+    // Initialize the leaderboard
+    renderTable();
     
-    const scores = JSON.parse(localStorage.getItem("scores")) || {};
-    let history = JSON.parse(localStorage.getItem("history")) || [];
+    // Setup popup controls
+    setupPopup();
+});
 
-    // Global variables for selected user/points
-    window.selectedUserName = null;
-    window.selectedPointValue = null;
-
-    // Render the leaderboard table
-function renderTable() {
-    const tableBody = document.getElementById("scoreTableBody");
-    if (!tableBody) return;
-
-    // Always get fresh scores from localStorage
-    const scores = initializeScores(); // This ensures scores are properly initialized
-    
-    tableBody.innerHTML = "";
-
-    // Create sorted array of users with their scores
-    const sortedUsers = appUsers
-        .map(user => ({
-            name: user,
-            score: scores[user] || 0
-        }))
-        .sort((a, b) => b.score - a.score);
-
-    // Build the table rows
-    sortedUsers.forEach(user => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${user.name}</td>
-            <td class="point-buttons">
-                ${[-50, -30, -20, -10, 2, 5, 10, 20, 50].map(points => `
-                    <button onclick="window.openReasonPopup('${user.name}', ${points})">
-                        ${points > 0 ? '+' + points : points}
-                    </button>
-                `).join('')}
-            </td>
-            <td>${user.score}</td>
-        `;
-        tableBody.appendChild(row);
-    });
+async function renderTable() {
+    try {
+        showLoading(true);
+        const response = await apiRequest('/api/leaderboard');
+        const tableBody = document.getElementById("scoreTableBody");
+        
+        if (!tableBody) {
+            console.error("Table body element not found");
+            return;
+        }
+        
+        // Create sorted table rows
+        tableBody.innerHTML = response.users
+            .map(user => `
+                <tr>
+                    <td>${user.username}</td>
+                    <td class="point-buttons">
+                        ${[-50, -30, -20, -10, 2, 5, 10, 20, 50].map(points => `
+                            <button onclick="window.openReasonPopup('${user.username}', ${points})">
+                                ${points > 0 ? '+' + points : points}
+                            </button>
+                        `).join('')}
+                    </td>
+                    <td>${user.score}</td>
+                </tr>`
+            ).join('');
+    } catch (error) {
+        console.error("Error loading leaderboard:", error);
+        showError("Failed to load leaderboard data");
+    } finally {
+        showLoading(false);
+    }
 }
 
-    // Popup control functions
+function setupPopup() {
     window.openReasonPopup = function(userName, pointValue) {
         window.selectedUserName = userName;
         window.selectedPointValue = pointValue;
@@ -67,43 +62,39 @@ function renderTable() {
         document.getElementById("reasonPopup").classList.add("hidden");
     };
 
-    window.confirmReason = function() {
+    window.confirmReason = async function() {
         const presetReason = document.getElementById("presetReason").value.trim();
         const extraReason = document.getElementById("extraReason").value.trim();
         const reason = presetReason || extraReason;
 
         if (!reason) {
-            alert("Please select or enter a reason");
+            showError("Please select or enter a reason");
             return;
         }
 
-        // Update scores using the common.js function
-        updateScores(selectedUserName, selectedPointValue);
-
-        // Add to history
-        history.push({
-            user: selectedUserName,
-            points: selectedPointValue,
-            reason: presetReason,
-            notes: extraReason || "No additional notes",
-            timestamp: new Date().toISOString()
-        });
-
-        // Save history
-        localStorage.setItem("history", JSON.stringify(history));
-        
-        // Dispatch events
-        window.dispatchEvent(new CustomEvent('historyUpdated'));
-        window.dispatchEvent(new CustomEvent('leaderboardUpdated'));
-
-        // Close popup and re-render
-        closeReasonPopup();
-        renderTable();
+        try {
+            showLoading(true);
+            await apiRequest('/api/leaderboard/update', 'POST', {
+                username: selectedUserName,
+                points: selectedPointValue,
+                reason: reason,
+                notes: extraReason || "No additional notes"
+            });
+            
+            closeReasonPopup();
+            renderTable();
+            showSuccess("Score updated successfully!");
+        } catch (error) {
+            console.error('Failed to update score:', error);
+            showError('Failed to update score');
+        } finally {
+            showLoading(false);
+        }
     };
+}
 
-    // Initial render
-    renderTable();
-});
+// Listen for updates from other pages
+window.addEventListener('leaderboardUpdated', renderTable);
 
 
 
