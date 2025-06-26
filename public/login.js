@@ -1,21 +1,4 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // Initialize users in localStorage if empty
-    const defaultUsers = [
-        { username: "Jp Soutar", password: "1234", role: "admin" },
-        { username: "Jp Faber", password: "1234", role: "admin" },
-        { username: "user1", password: "5678", role: "user" }
-    ];
-
-    try {
-        let users = JSON.parse(localStorage.getItem("users")) || [];
-        if (users.length === 0) {
-            localStorage.setItem("users", JSON.stringify(defaultUsers));
-        }
-    } catch (e) {
-        localStorage.setItem("users", JSON.stringify(defaultUsers));
-    }
-
-    // Login form submission
     document.getElementById("loginForm").addEventListener("submit", async function(e) {
         e.preventDefault();
         
@@ -24,66 +7,32 @@ document.addEventListener("DOMContentLoaded", function() {
         const errorEl = document.getElementById("loginError");
 
         try {
-            // Using your actual Render backend URL
-            const apiUrl = 'https://vt-engineering-leaderboard.onrender.com';
+            showLoading(true);
             
-            // Try backend login first
-            const response = await fetch(`${apiUrl}/api/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    username: username,
-                    password: password 
-                })
+            const response = await apiRequest('/api/auth/login', 'POST', { 
+                username: username,
+                password: password 
             });
 
-            // Successful backend login
-            if (response.ok) {
-                const data = await response.json();
-                
-                // Store authentication data
-                localStorage.setItem("token", data.token);
-                localStorage.setItem("loggedInUser", JSON.stringify({
-                    username: data.user.username,
-                    role: data.user.role
-                }));
-                
-                // Redirect based on role
-                if (data.user.role === "admin") {
-                    window.location.href = "admin_home.html";
-                } else {
-                    window.location.href = "user_home.html";
-                }
-                return;
-            }
-
-            // If backend fails, try local authentication
-            const users = JSON.parse(localStorage.getItem("users")) || [];
-            const user = users.find(u => 
-                u.username.toLowerCase() === username.toLowerCase() && 
-                u.password === password
-            );
-
-            if (user) {
-                localStorage.setItem("loggedInUser", JSON.stringify({
-                    username: user.username,
-                    role: user.role
-                }));
-                
-                if (user.role === "admin") {
-                    window.location.href = "admin_home.html";
-                } else {
-                    window.location.href = "user_home.html";
-                }
+            // Store authentication data
+            localStorage.setItem("token", response.token);
+            localStorage.setItem("loggedInUser", JSON.stringify({
+                username: response.user.username,
+                role: response.user.role
+            }));
+            
+            // Redirect based on role
+            if (response.user.role === "admin") {
+                window.location.href = "admin_home.html";
             } else {
-                throw new Error("Invalid username or password");
+                window.location.href = "user_home.html";
             }
         } catch (error) {
             console.error("Login error:", error);
             errorEl.textContent = error.message || "Login failed. Please try again.";
             document.getElementById("password").value = "";
+        } finally {
+            showLoading(false);
         }
     });
 });
