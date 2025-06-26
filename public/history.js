@@ -34,17 +34,9 @@ async function loadHistory() {
   }
 }
 
+// Update renderHistory function
 function renderHistory(history) {
   const tbody = document.getElementById('historyTableBody');
-  
-  if (history.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5" class="no-data">No history found</td>
-      </tr>
-    `;
-    return;
-  }
   
   tbody.innerHTML = history.map(item => `
     <tr>
@@ -53,20 +45,27 @@ function renderHistory(history) {
         ${item.points >= 0 ? '+' : ''}${item.points}
       </td>
       <td>${item.reason}</td>
-      <td>${item.admin || 'System'}</td>
+      <td class="notes-preview" onclick="showFullNote('${item.notes.replace(/'/g, "\\'")}')">
+        ${item.notes ? item.notes.substring(0, 20) + (item.notes.length > 20 ? '...' : '') : 'None'}
+      </td>
       <td>${new Date(item.timestamp).toLocaleString()}</td>
     </tr>
   `).join('');
 }
 
+// Update applyFilters function
 window.applyFilters = async function() {
   const user = document.getElementById('filterUser').value;
+  const reason = document.getElementById('filterReason').value;
+  const action = document.getElementById('filterAction').value;
   const date = document.getElementById('filterDate').value;
   
   try {
     showLoading(true);
     let url = '/api/history?';
     if (user !== 'all') url += `user=${encodeURIComponent(user)}&`;
+    if (reason !== 'all') url += `reason=${encodeURIComponent(reason)}&`;
+    if (action !== 'all') url += `action=${encodeURIComponent(action)}&`;
     if (date) url += `date=${date}`;
     
     const { history } = await apiRequest(url);
@@ -77,6 +76,22 @@ window.applyFilters = async function() {
   } finally {
     showLoading(false);
   }
+};
+// Add note preview modal
+window.showFullNote = function(note) {
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); display: flex; justify-content: center;
+    align-items: center; z-index: 1000; cursor: pointer;
+  `;
+  modal.innerHTML = `
+    <div style="background: white; padding: 20px; border-radius: 8px; max-width: 80%; max-height: 80%; overflow: auto;">
+      <p>${note}</p>
+    </div>
+  `;
+  modal.onclick = () => modal.remove();
+  document.body.appendChild(modal);
 };
 
 window.resetFilters = function() {
