@@ -1,52 +1,21 @@
-document.addEventListener("DOMContentLoaded", function() {
-    checkAuthentication().then(() => {
-        renderTable();
-    });
+document.addEventListener('DOMContentLoaded', async function() {
+  try {
+    showLoading(true);
+    const { users } = await apiRequest('/api/leaderboard');
+    const tableBody = document.getElementById('scoreTableBody');
+    
+    tableBody.innerHTML = users
+      .sort((a, b) => b.score - a.score)
+      .map(user => `
+        <tr>
+          <td>${user.username}</td>
+          <td>${user.score}</td>
+        </tr>
+      `).join('');
+  } catch (error) {
+    showError('Failed to load leaderboard');
+    console.error('Leaderboard error:', error);
+  } finally {
+    showLoading(false);
+  }
 });
-
-async function checkAuthentication() {
-    const token = localStorage.getItem('token');
-    const user = JSON.parse(localStorage.getItem('loggedInUser'));
-    
-    if (!token || !user) {
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    try {
-        await apiRequest('/api/health');
-    } catch (error) {
-        console.error('Authentication check failed:', error);
-        window.location.href = 'index.html';
-    }
-}
-
-async function renderTable() {
-    try {
-        showLoading(true);
-        const response = await apiRequest('/api/leaderboard');
-        const tableBody = document.getElementById("scoreTableBody");
-        
-        if (!tableBody) {
-            console.error("Table body element not found");
-            return;
-        }
-        
-        // Create sorted table rows
-        tableBody.innerHTML = response.users
-            .map(user => `
-                <tr>
-                    <td>${user.username}</td>
-                    <td>${user.score}</td>
-                </tr>`
-            ).join('');
-    } catch (error) {
-        console.error("Error loading leaderboard:", error);
-        showError("Failed to load leaderboard data");
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Listen for updates from other pages
-window.addEventListener('leaderboardUpdated', renderTable);
