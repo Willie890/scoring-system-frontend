@@ -1,32 +1,59 @@
 document.addEventListener("DOMContentLoaded", function() {
-    // Load and display history
-       const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
+    const loggedInUser = JSON.parse(localStorage.getItem("loggedInUser"));
     const homeLink = document.getElementById("homeLink");
     
     if (loggedInUser) {
         homeLink.href = loggedInUser.role === "admin" ? "admin_home.html" : "user_home.html";
     } else {
-        homeLink.href = "index.html"; // Fallback if not logged in
+        homeLink.href = "index.html";
     }
-	function loadHistory() {
-        try {
-            return JSON.parse(localStorage.getItem("history")) || [];
-        } catch (e) {
-            console.error("Error loading history:", e);
-            return [];
-        }
-    }
+    
+    initializeFilters();
+    loadAndRenderHistory();
+});
 
-   function populateHistoryTable(data) {
+async function loadAndRenderHistory() {
+    try {
+        showLoading(true);
+        const history = await loadHistory();
+        populateHistoryTable(history);
+        initializeFilters(history);
+    } catch (error) {
+        console.error("Error loading history:", error);
+        showError("Failed to load history data");
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function loadHistory() {
+    try {
+        const response = await apiRequest('/api/history');
+        return response.history;
+    } catch (error) {
+        console.error("Error loading history:", error);
+        throw error;
+    }
+}
+
+function populateHistoryTable(history) {
     const tableBody = document.getElementById("historyTableBody");
     tableBody.innerHTML = '';
+    
+    if (history.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="no-data">No history entries found</td>
+            </tr>
+        `;
+        return;
+    }
 
-    data.forEach(item => {
+    history.forEach(item => {
         const row = document.createElement('tr');
         
-        // Standardize the data
         const entry = {
-            user: item.user || item.name || "SYSTEM",
+            user: item.user || "SYSTEM",
             points: typeof item.points === 'number' ? item.points : 0,
             reason: item.reason || "System Operation",
             notes: item.notes || item.additionalNotes || "No notes",
@@ -44,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function() {
         pointsCell.className = entry.points >= 0 ? "positive" : "negative";
         row.appendChild(pointsCell);
         
-        // Reason cell (show only the reason)
+        // Reason cell
         const reasonCell = document.createElement('td');
         const reasonSpan = document.createElement('span');
         reasonSpan.className = 'truncated-text';
@@ -53,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function() {
         reasonCell.appendChild(reasonSpan);
         row.appendChild(reasonCell);
         
-        // Notes cell (show only the notes)
+        // Notes cell
         const notesCell = document.createElement('td');
         const notesSpan = document.createElement('span');
         notesSpan.className = 'truncated-text';
@@ -75,82 +102,60 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 }
 
-    // Filter functions
-    window.applyFilters = function() {
-        const nameFilter = document.getElementById("filterName").value.toLowerCase();
-        const reasonFilter = document.getElementById("filterReason").value.toLowerCase();
-        const dateFilter = document.getElementById("filterDate").value;
-        const history = loadHistory();
-
-        const filtered = history.filter(item => {
-            const entry = {
-                user: item.user || item.name || "SYSTEM",
-                reason: item.reason || "System Operation",
-                timestamp: item.timestamp || new Date().toISOString()
-            };
-            
-            const itemDate = new Date(entry.timestamp).toLocaleDateString();
-            const filterDate = dateFilter ? new Date(dateFilter).toLocaleDateString() : null;
-            
-            return (nameFilter === "all" || entry.user.toLowerCase().includes(nameFilter)) &&
-                   (reasonFilter === "all" || entry.reason.toLowerCase().includes(reasonFilter)) &&
-                   (!dateFilter || itemDate === filterDate);
-        });
-        
-        populateHistoryTable(filtered);
-    };
+function initializeFilters(history = []) {
+    const nameSelect = document.getElementById("filterName");
+    const reasonSelect = document.getElementById("filterReason");
     
-    window.resetFilters = function() {
-        document.getElementById("filterName").value = "all";
-        document.getElementById("filterReason").value = "all";
-        document.getElementById("filterDate").value = "";
-        populateHistoryTable(loadHistory());
-    };
+    nameSelect.innerHTML = '<option value="all">All Names</option>';
+    reasonSelect.innerHTML = '<option value="all">All Reasons</option>';
+    
+    // Get unique names and reasons
+    const names = [...new Set(history.map(item => item.user || "SYSTEM"))];
+    const reasons = [...new Set(history.map(item => item.reason || "System Operation"))];
+    
+    names.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = name;
+        nameSelect.appendChild(option);
+    });
+    
+    reasons.forEach(reason => {
+        const option = document.createElement("option");
+        option.value = reason;
+        option.textContent = reason;
+        reasonSelect.appendChild(option);
+    });
+}
 
-    // Initialize filters
-    function initializeFilters() {
-        const history = loadHistory();
-        const nameSelect = document.getElementById("filterName");
-        const reasonSelect = document.getElementById("filterReason");
-        
-        nameSelect.innerHTML = '<option value="all">All Names</option>';
-        reasonSelect.innerHTML = '<option value="all">All Reasons</option>';
-        
-        // Get unique names and reasons
-        const names = [...new Set(history.map(item => item.user || item.name || "SYSTEM"))];
-        const reasons = [...new Set(history.map(item => item.reason || "System Operation"))];
-        
-        names.forEach(name => {
-            const option = document.createElement("option");
-            option.value = name;
-            option.textContent = name;
-            nameSelect.appendChild(option);
-        });
-        
-        reasons.forEach(reason => {
-            const option = document.createElement("option");
-            option.value = reason;
-            option.textContent = reason;
-            reasonSelect.appendChild(option);
-        });
+window.applyFilters = async function() {
+    const nameFilter = document.getElementById("filterName").value;
+    const reasonFilter = document.getElementById("filterReason").value;
+    const dateFilter = document.getElementById("filterDate").value;
+
+    try {
+        showLoading(true);
+        let endpoint = '/api/history?';
+        if (nameFilter !== "all") endpoint += `user=${encodeURIComponent(nameFilter)}&`;
+        if (reasonFilter !== "all") endpoint += `reason=${encodeURIComponent(reasonFilter)}&`;
+        if (dateFilter) endpoint += `date=${dateFilter}`;
+
+        const response = await apiRequest(endpoint);
+        populateHistoryTable(response.history);
+    } catch (error) {
+        console.error("Filter error:", error);
+        showError("Failed to apply filters");
+    } finally {
+        showLoading(false);
     }
+};
 
-    // Listen for history updates
-    window.addEventListener('historyUpdated', function() {
-        populateHistoryTable(loadHistory());
-    });
-
-    // Refresh when page becomes visible
-    document.addEventListener('visibilitychange', function() {
-        if (!document.hidden) {
-            populateHistoryTable(loadHistory());
-        }
-    });
-
-    // Initial setup
-    initializeFilters();
-    populateHistoryTable(loadHistory());
-});
+window.resetFilters = function() {
+    document.getElementById("filterName").value = "all";
+    document.getElementById("filterReason").value = "all";
+    document.getElementById("filterDate").value = "";
+    loadAndRenderHistory();
+};
 
 // Modal functions
 function showFullText(fullText) {
@@ -167,9 +172,10 @@ function closeModal() {
 function copyToClipboard() {
     const text = document.getElementById("modalContent").textContent;
     navigator.clipboard.writeText(text).then(() => {
-        alert("Text copied to clipboard!");
+        showSuccess("Text copied to clipboard!");
     }).catch(err => {
         console.error("Failed to copy text: ", err);
+        showError("Failed to copy text");
     });
 }
 
@@ -179,3 +185,6 @@ window.onclick = function(event) {
         closeModal();
     }
 };
+
+// Listen for history updates
+window.addEventListener('historyUpdated', loadAndRenderHistory);
