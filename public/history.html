@@ -77,7 +77,40 @@
       </div>
       
       <button onclick="resetFilters()" class="reset-btn">Reset Filters</button>
-    </div>
+    </div> 
+    <!-- Add reason filter dropdown -->
+<div class="filter-group">
+  <label for="filterReason">Filter by Reason:</label>
+  <select id="filterReason" onchange="applyFilters()">
+    <option value="all">All Reasons</option>
+    <option value="Improvement Initiative">Improvement Initiative</option>
+    <option value="3S Adherence">3S Adherence</option>
+    <option value="3S Adherence">Preventative Maintenance</option>
+    <option value="3S Adherence">Defect Reduction</option>
+    <option value="3S Adherence">Efficiency Gains</option>
+    <option value="3S Adherence">Skill Develepment</option>
+    <option value="3S Adherence">Kaizen Suggestion</option>
+    <option value="3S Adherence">Team Contribution</option>
+    <option value="3S Adherence">Tooling Return Failure</option>
+    <option value="3S Adherence">Kiosk Misconduct</option>
+    <option value="3S Adherence">Rework or Delay</option>
+    <option value="3S Adherence">Maintenance Checklist Trhoughout Failure</option>
+    <option value="3S Adherence">Safety Violations</option>
+    <option value="3S Adherence">Tool Breakage</option>
+    <!-- Add other reasons from your system -->
+  </select>
+</div>
+
+<!-- Add action type filter -->
+<div class="filter-group">
+  <label for="filterAction">Filter by Action:</label>
+  <select id="filterAction" onchange="applyFilters()">
+    <option value="all">All Actions</option>
+    <option value="points_adjustment">Points Adjustment</option>
+    <option value="points_request">Points Request</option>
+    <option value="system_reset">System Reset</option>
+  </select>
+</div>
     
     <table class="history-table">
       <thead>
@@ -85,7 +118,7 @@
           <th>User</th>
           <th>Points</th>
           <th>Reason</th>
-          <th>Admin</th>
+          <th>Aditional Notes</th>
           <th>Date</th>
         </tr>
       </thead>
