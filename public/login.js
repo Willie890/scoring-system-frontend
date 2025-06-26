@@ -24,8 +24,8 @@ document.addEventListener("DOMContentLoaded", function() {
         const errorEl = document.getElementById("loginError");
 
         try {
-            // Replace with your actual Render backend URL
-            const apiUrl = 'https://your-render-app.onrender.com';
+            // Using your actual Render backend URL
+            const apiUrl = 'https://vt-engineering-leaderboard.onrender.com';
             
             // Try backend login first
             const response = await fetch(`${apiUrl}/api/auth/login`, {
@@ -33,22 +33,33 @@ document.addEventListener("DOMContentLoaded", function() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ 
+                    username: username,
+                    password: password 
+                })
             });
 
+            // Successful backend login
             if (response.ok) {
                 const data = await response.json();
+                
+                // Store authentication data
                 localStorage.setItem("token", data.token);
-                localStorage.setItem("loggedInUser", JSON.stringify(data.user));
+                localStorage.setItem("loggedInUser", JSON.stringify({
+                    username: data.user.username,
+                    role: data.user.role
+                }));
                 
                 // Redirect based on role
-                window.location.href = data.user.role === "admin" 
-                    ? "admin_home.html" 
-                    : "user_home.html";
+                if (data.user.role === "admin") {
+                    window.location.href = "admin_home.html";
+                } else {
+                    window.location.href = "user_home.html";
+                }
                 return;
             }
 
-            // Fallback to local authentication if backend fails
+            // If backend fails, try local authentication
             const users = JSON.parse(localStorage.getItem("users")) || [];
             const user = users.find(u => 
                 u.username.toLowerCase() === username.toLowerCase() && 
@@ -56,10 +67,16 @@ document.addEventListener("DOMContentLoaded", function() {
             );
 
             if (user) {
-                localStorage.setItem("loggedInUser", JSON.stringify(user));
-                window.location.href = user.role === "admin" 
-                    ? "admin_home.html" 
-                    : "user_home.html";
+                localStorage.setItem("loggedInUser", JSON.stringify({
+                    username: user.username,
+                    role: user.role
+                }));
+                
+                if (user.role === "admin") {
+                    window.location.href = "admin_home.html";
+                } else {
+                    window.location.href = "user_home.html";
+                }
             } else {
                 throw new Error("Invalid username or password");
             }
