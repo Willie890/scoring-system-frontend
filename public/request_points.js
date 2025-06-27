@@ -6,56 +6,48 @@ document.addEventListener('DOMContentLoaded', async function() {
     return;
   }
 
-  // Load all users from both users API and leaderboard
   try {
     showLoading(true);
     
-    // Fetch all users and scores in parallel
-    const [usersResponse, scoresResponse] = await Promise.all([
-      apiRequest('/api/users'),
-      apiRequest('/api/leaderboard')
-    ]);
+    // Fetch leaderboard data to get all user names
+    const { users: leaderboardUsers } = await apiRequest('/api/leaderboard');
     
-    const allUsers = usersResponse.users;
-    const scores = scoresResponse.users;
-    
-    // Create a mapping of usernames to display names
-    const userMap = {};
-    scores.forEach(score => {
-      userMap[score.username] = score.username; // Use username as display name
-    });
-
-    // Populate requesting user dropdown
+    // Create user options from leaderboard data
     const requestingSelect = document.getElementById('requestingUser');
-    allUsers.forEach(u => {
-      const option = document.createElement('option');
-      option.value = u.username;
-      option.textContent = userMap[u.username] || u.username;
-      requestingSelect.appendChild(option);
-    });
-
-    // Set default requesting user to current user
-    requestingSelect.value = user.username;
-    
-    // Populate receiving user dropdown (excluding current user)
     const receivingSelect = document.getElementById('receivingUser');
-    allUsers.forEach(u => {
-      if (u.username !== user.username) {
-        const option = document.createElement('option');
-        option.value = u.username;
-        option.textContent = userMap[u.username] || u.username;
-        receivingSelect.appendChild(option);
+    
+    // Clear existing options
+    requestingSelect.innerHTML = '<option value="">Select requester</option>';
+    receivingSelect.innerHTML = '<option value="">Select recipient</option>';
+    
+    // Populate dropdowns with names from the leaderboard
+    leaderboardUsers.forEach(userData => {
+      // Add to requesting user dropdown
+      const requestOption = document.createElement('option');
+      requestOption.value = userData.username;
+      requestOption.textContent = userData.username; // Using username as display name
+      requestingSelect.appendChild(requestOption);
+      
+      // Add to receiving user dropdown (excluding current user)
+      if (userData.username !== user.username) {
+        const receiveOption = document.createElement('option');
+        receiveOption.value = userData.username;
+        receiveOption.textContent = userData.username;
+        receivingSelect.appendChild(receiveOption);
       }
     });
+    
+    // Set default requesting user to current user
+    requestingSelect.value = user.username;
 
   } catch (error) {
-    showError('Failed to load users');
+    showError('Failed to load user data');
     console.error(error);
   } finally {
     showLoading(false);
   }
 
-  // Form submission
+  // Rest of your form submission code remains the same
   document.getElementById('requestForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -76,7 +68,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
       showSuccess('Request submitted successfully!');
       this.reset();
-      // Reset to current user as requester
       document.getElementById('requestingUser').value = user.username;
     } catch (error) {
       errorEl.textContent = error.message || 'Failed to submit request';
