@@ -6,37 +6,48 @@ document.addEventListener('DOMContentLoaded', async function() {
     return;
   }
 
-  // Load all users for both dropdowns
+  // Load all users from both users API and leaderboard
   try {
     showLoading(true);
-    const { users } = await apiRequest('/api/users');
-    const { scores } = await apiRequest('/api/leaderboard');
     
-    // Map usernames to their display names from scores
-    const userDisplayNames = {};
+    // Fetch all users and scores in parallel
+    const [usersResponse, scoresResponse] = await Promise.all([
+      apiRequest('/api/users'),
+      apiRequest('/api/leaderboard')
+    ]);
+    
+    const allUsers = usersResponse.users;
+    const scores = scoresResponse.users;
+    
+    // Create a mapping of usernames to display names
+    const userMap = {};
     scores.forEach(score => {
-      userDisplayNames[score.username] = score.username; // Or use a mapping if you have display names
+      userMap[score.username] = score.username; // Use username as display name
     });
 
     // Populate requesting user dropdown
     const requestingSelect = document.getElementById('requestingUser');
-    users.forEach(u => {
+    allUsers.forEach(u => {
       const option = document.createElement('option');
       option.value = u.username;
-      option.textContent = userDisplayNames[u.username] || u.username;
+      option.textContent = userMap[u.username] || u.username;
       requestingSelect.appendChild(option);
     });
 
-    // Populate receiving user dropdown
+    // Set default requesting user to current user
+    requestingSelect.value = user.username;
+    
+    // Populate receiving user dropdown (excluding current user)
     const receivingSelect = document.getElementById('receivingUser');
-    users.forEach(u => {
-      if (u.username !== user.username) { // Exclude current user
+    allUsers.forEach(u => {
+      if (u.username !== user.username) {
         const option = document.createElement('option');
         option.value = u.username;
-        option.textContent = userDisplayNames[u.username] || u.username;
+        option.textContent = userMap[u.username] || u.username;
         receivingSelect.appendChild(option);
       }
     });
+
   } catch (error) {
     showError('Failed to load users');
     console.error(error);
@@ -65,6 +76,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
       showSuccess('Request submitted successfully!');
       this.reset();
+      // Reset to current user as requester
       document.getElementById('requestingUser').value = user.username;
     } catch (error) {
       errorEl.textContent = error.message || 'Failed to submit request';
