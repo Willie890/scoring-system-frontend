@@ -25,7 +25,6 @@ window.logout = function() {
   window.location.href = 'index.html';
 };
 
-// API Request Handler
 window.apiRequest = async function(endpoint, method = 'GET', body = null) {
   const token = localStorage.getItem('token');
   const headers = {
@@ -41,12 +40,17 @@ window.apiRequest = async function(endpoint, method = 'GET', body = null) {
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Request failed');
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch {
+        errorData = { message: `HTTP error! status: ${response.status}` };
+      }
+      throw new Error(errorData.message || 'Request failed');
     }
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error(`API Error (${method} ${endpoint}):`, error);
     throw error;
   }
 };
