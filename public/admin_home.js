@@ -5,23 +5,28 @@ const PRESET_REASONS = [
   "Kiosk Misconduct", "Rework or Delay", "Safety Violations", "Tool Breakage"
 ];
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   renderLeaderboard();
   setupPointAdjustment();
-  checkPendingRequests();
   
-  // Check for new requests every 30 seconds
+  // Initial check
+  await checkPendingRequests();
+  
+  // Check every 30 seconds
   setInterval(checkPendingRequests, 30000);
 });
 
 async function checkPendingRequests() {
   try {
     const { requests } = await apiRequest('/api/requests?status=pending');
-    updateNotificationBadge(requests.length);
+    updateNotificationBadge(requests?.length || 0);
   } catch (error) {
-    console.error('Failed to check requests:', error);
+    console.error('Check requests error:', error);
+    // Silently fail - we don't want to show errors for background checks
   }
 }
+
+// ... rest of your admin_home.js remains the same ...
 
 function updateNotificationBadge(count) {
   const navLink = document.getElementById('notificationsLink');
