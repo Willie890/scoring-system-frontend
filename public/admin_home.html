@@ -5,6 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Home</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: red;
+      color: white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 12px;
+    }
+    
+    #notificationsLink {
+      position: relative;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -12,7 +32,7 @@
       <li><a href="admin_home.html">Home</a></li>
       <li><a href="history.html">History</a></li>
       <li><a href="settings.html">Settings</a></li>
-      <li><a href="notifications.html">Notifications</a></li>
+      <li><a href="notifications.html" id="notificationsLink">Notifications</a></li>
       <li><a href="#" onclick="logout()">Logout</a></li>
     </ul>
   </nav>
