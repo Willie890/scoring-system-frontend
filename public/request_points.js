@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', async function() {
-  // Get logged in user
   const user = JSON.parse(localStorage.getItem('loggedInUser'));
   if (!user) {
     logout();
@@ -8,27 +7,20 @@ document.addEventListener('DOMContentLoaded', async function() {
 
   try {
     showLoading(true);
-    
-    // Fetch leaderboard data to get all user names
     const { users: leaderboardUsers } = await apiRequest('/api/leaderboard');
     
-    // Create user options from leaderboard data
     const requestingSelect = document.getElementById('requestingUser');
     const receivingSelect = document.getElementById('receivingUser');
     
-    // Clear existing options
     requestingSelect.innerHTML = '<option value="">Select requester</option>';
     receivingSelect.innerHTML = '<option value="">Select recipient</option>';
     
-    // Populate dropdowns with names from the leaderboard
     leaderboardUsers.forEach(userData => {
-      // Add to requesting user dropdown
       const requestOption = document.createElement('option');
       requestOption.value = userData.username;
-      requestOption.textContent = userData.username; // Using username as display name
+      requestOption.textContent = userData.username;
       requestingSelect.appendChild(requestOption);
       
-      // Add to receiving user dropdown (excluding current user)
       if (userData.username !== user.username) {
         const receiveOption = document.createElement('option');
         receiveOption.value = userData.username;
@@ -37,9 +29,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     });
     
-    // Set default requesting user to current user
     requestingSelect.value = user.username;
-
   } catch (error) {
     showError('Failed to load user data');
     console.error(error);
@@ -47,7 +37,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     showLoading(false);
   }
 
-  // Rest of your form submission code remains the same
   document.getElementById('requestForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
@@ -59,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       btn.disabled = true;
       btnText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
 
-      await apiRequest('/api/requests', 'POST', {
+      const response = await apiRequest('/api/requests', 'POST', {
         receivingUser: document.getElementById('receivingUser').value,
         points: parseInt(document.getElementById('points').value),
         reason: document.getElementById('reason').value,
@@ -71,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       document.getElementById('requestingUser').value = user.username;
     } catch (error) {
       errorEl.textContent = error.message || 'Failed to submit request';
-      console.error(error);
+      console.error('Request error:', error);
     } finally {
       showLoading(false);
       btn.disabled = false;
@@ -79,3 +68,13 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   });
 });
+
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
