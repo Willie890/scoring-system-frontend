@@ -19,7 +19,7 @@ async function renderLeaderboard() {
       <tr>
         <td>${user.username}</td>
         <td class="point-buttons">
-          ${[-50, -30, -20, -10, 5, 10, 20, 50].map(points => `
+          ${[-50, -30, -20, -10,2, 5,7, 10, 20, 50].map(points => `
             <button onclick="showAdjustmentDialog('${user.username}', ${points})">
               ${points > 0 ? '+' + points : points}
             </button>
