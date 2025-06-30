@@ -8,7 +8,36 @@ const PRESET_REASONS = [
 document.addEventListener('DOMContentLoaded', function() {
   renderLeaderboard();
   setupPointAdjustment();
+  checkPendingRequests();
+  
+  // Check for new requests every 30 seconds
+  setInterval(checkPendingRequests, 30000);
 });
+
+async function checkPendingRequests() {
+  try {
+    const { requests } = await apiRequest('/api/requests?status=pending');
+    updateNotificationBadge(requests.length);
+  } catch (error) {
+    console.error('Failed to check requests:', error);
+  }
+}
+
+function updateNotificationBadge(count) {
+  const navLink = document.getElementById('notificationsLink');
+  let badge = navLink.querySelector('.notification-badge');
+  
+  if (count > 0) {
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'notification-badge';
+      navLink.appendChild(badge);
+    }
+    badge.textContent = count;
+  } else if (badge) {
+    badge.remove();
+  }
+}
 
 async function renderLeaderboard() {
   try {
@@ -19,7 +48,7 @@ async function renderLeaderboard() {
       <tr>
         <td>${user.username}</td>
         <td class="point-buttons">
-          ${[-50, -30, -20, -10,2, 5,7, 10, 20, 50].map(points => `
+          ${[-50, -30, -20, -10, 2, 5, 7, 10, 20, 50].map(points => `
             <button onclick="showAdjustmentDialog('${user.username}', ${points})">
               ${points > 0 ? '+' + points : points}
             </button>
