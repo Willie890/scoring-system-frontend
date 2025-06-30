@@ -3,7 +3,6 @@ let currentApproveAction = false;
 
 document.addEventListener('DOMContentLoaded', async function() {
   await loadRequests();
-  // Refresh every 30 seconds
   setInterval(loadRequests, 30000);
 });
 
@@ -15,7 +14,7 @@ async function loadRequests() {
     
     const tbody = document.getElementById('requestsTableBody');
     
-    if (requests.length === 0) {
+    if (!requests || requests.length === 0) {
       tbody.innerHTML = `
         <tr>
           <td colspan="6" class="no-data">No pending requests</td>
@@ -40,12 +39,14 @@ async function loadRequests() {
       </tr>
     `).join('');
   } catch (error) {
-    showError('Failed to load requests');
-    console.error(error);
+    console.error('Load requests error:', error);
+    showError('Failed to load requests. Please try again.');
   } finally {
     showLoading(false);
   }
 }
+
+// ... rest of your notifications.js remains the same ...
 
 function updateNotificationBadge(count) {
   const navLinks = document.querySelectorAll('a[href="notifications.html"]');
