@@ -171,28 +171,27 @@
 </div>
 
 <!-- Add this section to the notifications page -->
-<div id="productionNotifications" class="tab-content hidden">
-  <table id="productionTable">
+<!-- Add this section to your existing notifications page -->
+<div id="productionNotifications" class="tab-content">
+  <table class="history-table">
     <thead>
       <tr>
         <th>Workorder</th>
-        <th>Quantity</th>
         <th>Machine</th>
         <th>Operation</th>
+        <th>Quantity</th>
         <th>Rejects</th>
-        <th>Submitted By</th>
         <th>Date</th>
         <th>Actions</th>
       </tr>
     </thead>
-    <tbody id="productionTableBody">
+    <tbody id="productionNotificationsBody">
       <tr>
-        <td colspan="8" class="no-data">Loading production notifications...</td>
+        <td colspan="7" class="no-data">Loading production notifications...</td>
       </tr>
     </tbody>
   </table>
 </div>
-
 <style>
   .tabs {
     display: flex;
