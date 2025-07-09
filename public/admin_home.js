@@ -114,6 +114,19 @@ function setupPointAdjustment() {
     } finally {
       showLoading(false);
     }
+    async function checkPendingNotifications() {
+  try {
+    const [{ requests }, { notifications }] = await Promise.all([
+      apiRequest('/api/requests?status=pending'),
+      apiRequest('/api/production/notifications')
+    ]);
+    
+    const totalNotifications = (requests?.length || 0) + (notifications?.length || 0);
+    updateNotificationBadge(totalNotifications);
+  } catch (error) {
+    console.error('Check notifications error:', error);
+  }
+}
   });
 }
 
