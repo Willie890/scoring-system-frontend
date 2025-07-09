@@ -14,6 +14,19 @@ document.addEventListener('DOMContentLoaded', async function() {
   // Form submission
   document.getElementById('productionForm').addEventListener('submit', async function(e) {
     e.preventDefault();
+    
+    // Validate inputs
+    const workorder = document.getElementById('workorder').value;
+    const quantity = document.getElementById('quantity').value;
+    const machine = document.getElementById('machine').value;
+    const operation = document.getElementById('operation').value;
+    const rejects = document.getElementById('rejects').value;
+    
+    if (!workorder || !quantity || !machine || !operation || !rejects) {
+      showError('Please fill all required fields');
+      return;
+    }
+
     const btn = this.querySelector('button[type="submit"]');
     
     try {
@@ -21,11 +34,11 @@ document.addEventListener('DOMContentLoaded', async function() {
       btn.disabled = true;
       
       await apiRequest('/api/production', 'POST', {
-        workorder: document.getElementById('workorder').value,
-        quantity: parseInt(document.getElementById('quantity').value),
-        machine: document.getElementById('machine').value,
-        operation: document.getElementById('operation').value,
-        rejects: parseInt(document.getElementById('rejects').value),
+        workorder,
+        quantity: parseInt(quantity),
+        machine,
+        operation,
+        rejects: parseInt(rejects),
         notes: document.getElementById('notes').value || undefined
       });
 
@@ -57,7 +70,7 @@ async function loadProductionHistory() {
     if (!history || history.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="8" class="no-data">No production history found</td>
+          <td colspan="7" class="no-data">No production history found</td>
         </tr>
       `;
       return;
@@ -73,7 +86,7 @@ async function loadProductionHistory() {
           <td>${entry.machine}</td>
           <td>${entry.operation}</td>
           <td>${entry.rejects}</td>
-          <td class="${rejectRate > 5 ? 'reject-rate' : ''}">${rejectRate}%</td>
+          <td>${rejectRate}%</td>
           <td>${entry.notes || '-'}</td>
         </tr>
       `;
@@ -90,50 +103,4 @@ function resetProductionFilters() {
   document.getElementById('filterDate').valueAsDate = new Date();
   document.getElementById('filterWorkorder').value = '';
   loadProductionHistory();
-   // Validate dropdowns
-  const machine = document.getElementById('machine').value;
-  const operation = document.getElementById('operation').value;
-  
-  if (!machine) {
-    showError('Please select a machine');
-    return;
-  }
-  
-  if (!operation) {
-    showError('Please select an operation');
-    return;
-  }
-
-  const btn = this.querySelector('button[type="submit"]');
-  
-  try {
-    showLoading(true);
-    btn.disabled = true;
-    
-    await apiRequest('/api/production', 'POST', {
-      workorder: document.getElementById('workorder').value,
-      quantity: parseInt(document.getElementById('quantity').value),
-      machine: machine,
-      operation: operation,
-      rejects: parseInt(document.getElementById('rejects').value),
-      notes: document.getElementById('notes').value || undefined
-    });
-
-    showSuccess('Production entry saved successfully!');
-    this.reset();
-    await loadProductionHistory();
-  } catch (error) {
-    showError(error.message || 'Failed to save production entry');
-    console.error('Production submission error:', error);
-  } finally {
-    showLoading(false);
-    btn.disabled = false;
-  }
-});
-}
-
-function updateNotificationBadge() {
-  // This would be called after successful submission
-  // Implementation depends on your notification system
-  console.log('New production entry added - update notifications');
 }
