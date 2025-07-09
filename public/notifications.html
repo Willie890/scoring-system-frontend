@@ -164,6 +164,65 @@
       </div>
     </div>
   </div>
+  <!-- Add this tab to the notifications page -->
+<div class="tabs">
+  <button class="tab-button active" onclick="showTab('requests')">Point Requests</button>
+  <button class="tab-button" onclick="showTab('production')">Production Entries</button>
+</div>
+
+<!-- Add this section to the notifications page -->
+<div id="productionNotifications" class="tab-content hidden">
+  <table id="productionTable">
+    <thead>
+      <tr>
+        <th>Workorder</th>
+        <th>Quantity</th>
+        <th>Machine</th>
+        <th>Operation</th>
+        <th>Rejects</th>
+        <th>Submitted By</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="productionTableBody">
+      <tr>
+        <td colspan="8" class="no-data">Loading production notifications...</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<style>
+  .tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .tab-button {
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: bold;
+    color: #555;
+  }
+  
+  .tab-button.active {
+    border-bottom-color: #2196F3;
+    color: #2196F3;
+  }
+  
+  .tab-content {
+    display: none;
+  }
+  
+  .tab-content.active {
+    display: block;
+  }
+</style>
 
   <script src="common.js"></script>
   <script src="notifications.js"></script>
