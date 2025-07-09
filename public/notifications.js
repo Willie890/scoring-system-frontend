@@ -154,60 +154,47 @@ function showTab(tabName) {
   });
 }
 
+// Add these functions to your existing notifications.js
 async function loadProductionNotifications() {
   try {
-    showLoading(true);
     const { notifications } = await apiRequest('/api/production/notifications');
+    const tbody = document.getElementById('productionNotificationsBody');
     
-    const tbody = document.getElementById('productionTableBody');
-    
-    if (!notifications || notifications.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="8" class="no-data">No production notifications</td>
+    tbody.innerHTML = notifications && notifications.length > 0 ?
+      notifications.map(notif => `
+        <tr data-id="${notif._id}">
+          <td>${notif.workorder}</td>
+          <td>${notif.machine}</td>
+          <td>${notif.operation}</td>
+          <td>${notif.quantity}</td>
+          <td>${notif.rejects}</td>
+          <td>${new Date(notif.createdAt).toLocaleString()}</td>
+          <td>
+            <button onclick="markProductionNotificationRead('${notif._id}')">Mark Read</button>
+          </td>
         </tr>
-      `;
-      return;
-    }
-    
-    tbody.innerHTML = notifications.map(notif => `
-      <tr data-id="${notif._id}">
-        <td>${notif.workorder}</td>
-        <td>${notif.quantity}</td>
-        <td>${notif.machine}</td>
-        <td>${notif.operation}</td>
-        <td>${notif.rejects}</td>
-        <td>${notif.submittedBy}</td>
-        <td>${new Date(notif.createdAt).toLocaleString()}</td>
-        <td>
-          <button class="view-btn" onclick="viewProductionEntry('${notif.productionId}')">View</button>
-          <button class="mark-read-btn" onclick="markNotificationRead('${notif._id}')">Mark Read</button>
-        </td>
-      </tr>
-    `).join('');
+      `).join('') : `
+      <tr>
+        <td colspan="7" class="no-data">No new production notifications</td>
+      </tr>`;
   } catch (error) {
-    showError('Failed to load production notifications');
-    console.error(error);
-  } finally {
-    showLoading(false);
+    console.error('Failed to load production notifications:', error);
   }
 }
 
-window.viewProductionEntry = function(productionId) {
-  // Implement view functionality
-  window.location.href = `production-details.html?id=${productionId}`;
-};
-
-window.markNotificationRead = async function(notificationId) {
+async function markProductionNotificationRead(id) {
   try {
-    await apiRequest(`/api/production/notifications/${notificationId}/mark-read`, 'POST');
-    document.querySelector(`tr[data-id="${notificationId}"]`).remove();
-    updateNotificationBadges();
+    await apiRequest(`/api/production/notifications/${id}/mark-read`, 'POST');
+    document.querySelector(`tr[data-id="${id}"]`).remove();
+    updateNotificationBadge();
   } catch (error) {
     showError('Failed to mark notification as read');
-    console.error(error);
+    console.error('Error:', error);
   }
-};
+}
+
+// Call this when loading the notifications page
+loadProductionNotifications();
 
 // Update the badge update function
 async function updateNotificationBadges() {
