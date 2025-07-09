@@ -129,15 +129,33 @@
         <input type="number" id="quantity" min="1" required>
       </div>
       
-      <div class="form-group">
-        <label for="machine">Machine</label>
-        <input type="text" id="machine" required>
-      </div>
+ <div class="form-group">
+  <label for="machine">Machine</label>
+  <select id="machine" required>
+    <option value="">Select Machine</option>
+    <option value="Haas DC1">Haas DC1</option>
+    <option value="Hurco">Hurco</option>
+    <option value="Tormach">Tormach</option>
+    <option value="Victor NP16">Victor NP16</option>
+    <option value="Victor P76">Victor P76</option>
+    <option value="Haas TM1P">Haas TM1P</option>
+    <option value="Material Prep">Material Prep</option>
+  </select>
+</div>
       
-      <div class="form-group">
-        <label for="operation">Operation</label>
-        <input type="text" id="operation" required>
-      </div>
+    <div class="form-group">
+  <label for="operation">Operation</label>
+  <select id="operation" required>
+    <option value="">Select Operation</option>
+    <option value="Turn-Op1">Turn-Op1</option>
+    <option value="Turn-Op2">Turn-Op2</option>
+    <option value="Turn-Op3">Turn-Op3</option>
+    <option value="Mill-Op1">Mill-Op1</option>
+    <option value="Mill-Op2">Mill-Op2</option>
+    <option value="Mill-Op3">Mill-Op3</option>
+    <option value="QC">QC</option>
+  </select>
+</div>
       
       <div class="form-group">
         <label for="rejects">Rejects</label>
