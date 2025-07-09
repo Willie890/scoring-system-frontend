@@ -52,11 +52,6 @@
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    
-    .submit-btn:hover {
-      background-color: #0b7dda;
     }
     
     .history-table {
@@ -77,10 +72,6 @@
       border-bottom: 1px solid #eee;
     }
     
-    .history-table tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-    
     .no-data {
       text-align: center;
       padding: 20px;
@@ -89,28 +80,29 @@
     
     .filters {
       display: flex;
-      flex-wrap: wrap;
       gap: 15px;
       margin-bottom: 20px;
     }
     
     .filter-group {
       flex: 1;
-      min-width: 200px;
     }
     
-    .reject-rate {
-      color: #f44336;
-      font-weight: bold;
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 1em;
     }
   </style>
 </head>
 <body>
   <nav class="navbar">
     <ul>
-      <li><a href="#" id="homeLink">Home</a></li>
+      <li><a href="user_home.html">Home</a></li>
       <li><a href="production.html">Daily Production</a></li>
-      <li><a href="history.html">Points History</a></li>
+      <li><a href="history.html">History</a></li>
       <li><a href="#" onclick="logout()">Logout</a></li>
     </ul>
   </nav>
@@ -129,33 +121,33 @@
         <input type="number" id="quantity" min="1" required>
       </div>
       
- <div class="form-group">
-  <label for="machine">Machine</label>
-  <select id="machine" required>
-    <option value="">Select Machine</option>
-    <option value="Haas DC1">Haas DC1</option>
-    <option value="Hurco">Hurco</option>
-    <option value="Tormach">Tormach</option>
-    <option value="Victor NP16">Victor NP16</option>
-    <option value="Victor P76">Victor P76</option>
-    <option value="Haas TM1P">Haas TM1P</option>
-    <option value="Material Prep">Material Prep</option>
-  </select>
-</div>
+      <div class="form-group">
+        <label for="machine">Machine</label>
+        <select id="machine" required>
+          <option value="">Select Machine</option>
+          <option value="Haas DC1">Haas DC1</option>
+          <option value="Hurco">Hurco</option>
+          <option value="Tormach">Tormach</option>
+          <option value="Victor NP16">Victor NP16</option>
+          <option value="Victor P76">Victor P76</option>
+          <option value="Haas TM1P">Haas TM1P</option>
+          <option value="Material Prep">Material Prep</option>
+        </select>
+      </div>
       
-    <div class="form-group">
-  <label for="operation">Operation</label>
-  <select id="operation" required>
-    <option value="">Select Operation</option>
-    <option value="Turn-Op1">Turn-Op1</option>
-    <option value="Turn-Op2">Turn-Op2</option>
-    <option value="Turn-Op3">Turn-Op3</option>
-    <option value="Mill-Op1">Mill-Op1</option>
-    <option value="Mill-Op2">Mill-Op2</option>
-    <option value="Mill-Op3">Mill-Op3</option>
-    <option value="QC">QC</option>
-  </select>
-</div>
+      <div class="form-group">
+        <label for="operation">Operation</label>
+        <select id="operation" required>
+          <option value="">Select Operation</option>
+          <option value="Turn-Op1">Turn-Op1</option>
+          <option value="Turn-Op2">Turn-Op2</option>
+          <option value="Turn-Op3">Turn-Op3</option>
+          <option value="Mill-Op1">Mill-Op1</option>
+          <option value="Mill-Op2">Mill-Op2</option>
+          <option value="Mill-Op3">Mill-Op3</option>
+          <option value="QC">QC</option>
+        </select>
+      </div>
       
       <div class="form-group">
         <label for="rejects">Rejects</label>
@@ -173,14 +165,14 @@
     <h2>Production History</h2>
     <div class="filters">
       <div class="filter-group">
-        <label for="filterDate">Filter by Date:</label>
-        <input type="date" id="filterDate" onchange="loadProductionHistory()">
+        <label for="filterDate">Date:</label>
+        <input type="date" id="filterDate">
       </div>
       <div class="filter-group">
-        <label for="filterWorkorder">Filter by Workorder:</label>
-        <input type="text" id="filterWorkorder" onchange="loadProductionHistory()" placeholder="Enter workorder">
+        <label for="filterWorkorder">Workorder:</label>
+        <input type="text" id="filterWorkorder" placeholder="Filter by workorder">
       </div>
-      <button onclick="resetProductionFilters()" class="reset-btn">Reset Filters</button>
+      <button onclick="loadProductionHistory()" class="submit-btn">Apply Filters</button>
     </div>
     
     <table class="history-table">
@@ -192,13 +184,12 @@
           <th>Machine</th>
           <th>Operation</th>
           <th>Rejects</th>
-          <th>Reject Rate</th>
           <th>Notes</th>
         </tr>
       </thead>
       <tbody id="productionHistoryBody">
         <tr>
-          <td colspan="8" class="no-data">Loading history...</td>
+          <td colspan="7" class="no-data">Submit a production entry to see history</td>
         </tr>
       </tbody>
     </table>
