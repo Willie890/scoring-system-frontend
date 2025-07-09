@@ -124,4 +124,112 @@ function escapeHtml(unsafe) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+  let currentTab = 'requests';
+
+document.addEventListener('DOMContentLoaded', async function() {
+  await loadRequests();
+  await loadProductionNotifications();
+  
+  // Set up tab switching
+  document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', function() {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      currentTab = this.getAttribute('onclick').match(/'(\w+)'/)[1];
+      showTab(currentTab);
+    });
+  });
+  
+  // Refresh every 30 seconds
+  setInterval(() => {
+    if (currentTab === 'requests') loadRequests();
+    if (currentTab === 'production') loadProductionNotifications();
+  }, 30000);
+});
+
+function showTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(tab => {
+    tab.classList.toggle('hidden', tab.id !== `${tabName}Notifications`);
+    tab.classList.toggle('active', tab.id === `${tabName}Notifications`);
+  });
+}
+
+async function loadProductionNotifications() {
+  try {
+    showLoading(true);
+    const { notifications } = await apiRequest('/api/production/notifications');
+    
+    const tbody = document.getElementById('productionTableBody');
+    
+    if (!notifications || notifications.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="8" class="no-data">No production notifications</td>
+        </tr>
+      `;
+      return;
+    }
+    
+    tbody.innerHTML = notifications.map(notif => `
+      <tr data-id="${notif._id}">
+        <td>${notif.workorder}</td>
+        <td>${notif.quantity}</td>
+        <td>${notif.machine}</td>
+        <td>${notif.operation}</td>
+        <td>${notif.rejects}</td>
+        <td>${notif.submittedBy}</td>
+        <td>${new Date(notif.createdAt).toLocaleString()}</td>
+        <td>
+          <button class="view-btn" onclick="viewProductionEntry('${notif.productionId}')">View</button>
+          <button class="mark-read-btn" onclick="markNotificationRead('${notif._id}')">Mark Read</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    showError('Failed to load production notifications');
+    console.error(error);
+  } finally {
+    showLoading(false);
+  }
+}
+
+window.viewProductionEntry = function(productionId) {
+  // Implement view functionality
+  window.location.href = `production-details.html?id=${productionId}`;
+};
+
+window.markNotificationRead = async function(notificationId) {
+  try {
+    await apiRequest(`/api/production/notifications/${notificationId}/mark-read`, 'POST');
+    document.querySelector(`tr[data-id="${notificationId}"]`).remove();
+    updateNotificationBadges();
+  } catch (error) {
+    showError('Failed to mark notification as read');
+    console.error(error);
+  }
+};
+
+// Update the badge update function
+async function updateNotificationBadges() {
+  try {
+    const [{ requests }, { notifications }] = await Promise.all([
+      apiRequest('/api/requests?status=pending'),
+      apiRequest('/api/production/notifications')
+    ]);
+    
+    const totalNotifications = (requests?.length || 0) + (notifications?.length || 0);
+    
+    const badges = document.querySelectorAll('.notification-badge');
+    badges.forEach(badge => {
+      if (totalNotifications > 0) {
+        badge.textContent = totalNotifications;
+        badge.style.display = 'flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    });
+  } catch (error) {
+    console.error('Failed to update badges:', error);
+  }
+}
 }
