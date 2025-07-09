@@ -1,16 +1,46 @@
 let currentRequestId = null;
 let currentApproveAction = false;
+let currentTab = 'requests';
 
 document.addEventListener('DOMContentLoaded', async function() {
+  // Initialize tabs
+  showTab('requests');
+  
+  // Set up tab switching
+  document.querySelectorAll('.tab-button').forEach(button => {
+    button.addEventListener('click', function() {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      currentTab = this.getAttribute('onclick').match(/'(\w+)'/)[1];
+      showTab(currentTab);
+    });
+  });
+  
+  // Load initial data
   await loadRequests();
-  setInterval(loadRequests, 30000);
+  await loadProductionNotifications();
+  
+  // Refresh every 30 seconds
+  setInterval(() => {
+    if (currentTab === 'requests') loadRequests();
+    if (currentTab === 'production') loadProductionNotifications();
+  }, 30000);
 });
+
+function showTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(tab => {
+    tab.classList.remove('active');
+    if (tab.id === `${tabName}Notifications`) {
+      tab.classList.add('active');
+    }
+  });
+}
 
 async function loadRequests() {
   try {
     showLoading(true);
     const { requests } = await apiRequest('/api/requests?status=pending');
-    updateNotificationBadge(requests.length);
+    updateNotificationBadge();
     
     const tbody = document.getElementById('requestsTableBody');
     
@@ -43,6 +73,54 @@ async function loadRequests() {
     showError('Failed to load requests. Please try again.');
   } finally {
     showLoading(false);
+  }
+}
+
+async function loadProductionNotifications() {
+  try {
+    showLoading(true);
+    const { notifications } = await apiRequest('/api/production/notifications');
+    
+    const tbody = document.getElementById('productionNotificationsBody');
+    
+    if (!notifications || notifications.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="no-data">No new production notifications</td>
+        </tr>
+      `;
+      return;
+    }
+    
+    tbody.innerHTML = notifications.map(notif => `
+      <tr data-id="${notif._id}">
+        <td>${notif.workorder}</td>
+        <td>${notif.machine}</td>
+        <td>${notif.operation}</td>
+        <td>${notif.quantity}</td>
+        <td>${notif.rejects}</td>
+        <td>${new Date(notif.createdAt).toLocaleString()}</td>
+        <td>
+          <button onclick="markProductionNotificationRead('${notif._id}')">Mark Read</button>
+        </td>
+      </tr>
+    `).join('');
+  } catch (error) {
+    console.error('Failed to load production notifications:', error);
+    showError('Failed to load production notifications');
+  } finally {
+    showLoading(false);
+  }
+}
+
+async function markProductionNotificationRead(id) {
+  try {
+    await apiRequest(`/api/production/notifications/${id}/mark-read`, 'POST');
+    document.querySelector(`tr[data-id="${id}"]`).remove();
+    updateNotificationBadge();
+  } catch (error) {
+    showError('Failed to mark notification as read');
+    console.error('Error:', error);
   }
 }
 
