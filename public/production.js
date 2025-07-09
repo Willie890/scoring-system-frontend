@@ -90,4 +90,44 @@ function resetProductionFilters() {
   document.getElementById('filterDate').valueAsDate = new Date();
   document.getElementById('filterWorkorder').value = '';
   loadProductionHistory();
+   // Validate dropdowns
+  const machine = document.getElementById('machine').value;
+  const operation = document.getElementById('operation').value;
+  
+  if (!machine) {
+    showError('Please select a machine');
+    return;
+  }
+  
+  if (!operation) {
+    showError('Please select an operation');
+    return;
+  }
+
+  const btn = this.querySelector('button[type="submit"]');
+  
+  try {
+    showLoading(true);
+    btn.disabled = true;
+    
+    await apiRequest('/api/production', 'POST', {
+      workorder: document.getElementById('workorder').value,
+      quantity: parseInt(document.getElementById('quantity').value),
+      machine: machine,
+      operation: operation,
+      rejects: parseInt(document.getElementById('rejects').value),
+      notes: document.getElementById('notes').value || undefined
+    });
+
+    showSuccess('Production entry saved successfully!');
+    this.reset();
+    await loadProductionHistory();
+  } catch (error) {
+    showError(error.message || 'Failed to save production entry');
+    console.error('Production submission error:', error);
+  } finally {
+    showLoading(false);
+    btn.disabled = false;
+  }
+});
 }
