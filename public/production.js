@@ -131,3 +131,9 @@ function resetProductionFilters() {
   }
 });
 }
+
+function updateNotificationBadge() {
+  // This would be called after successful submission
+  // Implementation depends on your notification system
+  console.log('New production entry added - update notifications');
+}
